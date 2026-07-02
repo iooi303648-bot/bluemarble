@@ -116,9 +116,9 @@
     }
     .flag-badge img { width:100%; height:100%; object-fit:cover; display:block; }
     .owner {
-      font-size:.6rem; font-weight:900; color:var(--navy); background:rgba(255,255,255,.85); border-radius:999px;
-      padding:2px 6px; align-self:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-      border:1px solid rgba(0,0,0,.1);
+      font-size:.66rem; font-weight:900; color:#fff; background:var(--owner-color,#888); border-radius:999px;
+      padding:3px 7px; align-self:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.35);
     }
     .meta { font-size:.64rem; color:var(--muted); line-height:1.2; text-align:center; }
 
@@ -126,7 +126,8 @@
     .token {
       display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%;
       background:radial-gradient(circle at 30% 25%, #fff, var(--piece,#2f6fa8) 60%);
-      border:2px solid #fff; font-size:.78rem; line-height:1;
+      border:2px solid #fff; font-size:.78rem; line-height:1; font-weight:900; color:#fff;
+      text-shadow:0 1px 2px rgba(0,0,0,.55);
       box-shadow:0 3px 0 rgba(0,0,0,.28), 0 5px 8px rgba(0,0,0,.3);
     }
     .player .token, .active-player .token, .result-row .token { width:30px; height:30px; font-size:1.05rem; }
@@ -149,9 +150,10 @@
     .turn-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
     .active-player { display:flex; gap:9px; align-items:center; font-weight:900; font-size:1.1rem; color:var(--navy); }
     .dice {
-      width:72px; height:72px; display:grid; place-items:center; border-radius:12px; margin:8px auto 12px;
+      min-width:72px; height:72px; padding:0 10px; display:flex; gap:6px; align-items:center; justify-content:center;
+      border-radius:12px; margin:8px auto 12px; width:fit-content;
       background:linear-gradient(160deg,#fff,#ecdfc0); border:3px solid var(--navy); color:var(--navy);
-      font-size:2.6rem; font-weight:900; box-shadow:0 8px 0 rgba(20,35,58,.35), 0 14px 20px rgba(0,0,0,.2);
+      font-size:2rem; font-weight:900; box-shadow:0 8px 0 rgba(20,35,58,.35), 0 14px 20px rgba(0,0,0,.2);
       transition:transform .1s ease;
     }
     .dice.rolling { animation:diceRoll .5s ease; }
@@ -196,6 +198,20 @@
     .travel-card .choices { margin-bottom:0; }
     .travel-card.empty { opacity:.78; }
 
+    .owned-panel { border:2px solid var(--line); border-radius:10px; padding:10px 12px; background:#fffdf6; }
+    .owned-list { display:grid; gap:6px; }
+    .owned-list .empty-note { margin:0; color:var(--muted); font-size:.84rem; }
+    .owned-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; font-weight:800; font-size:.86rem; }
+    .owned-row button { padding:.4rem .6rem; font-size:.78rem; box-shadow:none; border-radius:6px; }
+
+    .toast {
+      position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px);
+      background:var(--navy); color:#fdf6e6; padding:12px 22px; border-radius:999px; font-weight:900;
+      border:2px solid var(--gold); box-shadow:0 14px 30px rgba(0,0,0,.35);
+      opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:30;
+    }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
     .mission { margin:10px 0; padding:11px; border-radius:8px; background:linear-gradient(160deg,var(--gold-light),#fdf6e6); border:2px solid var(--gold); color:var(--navy); font-weight:900; text-align:center; box-shadow:0 5px 0 rgba(90,56,31,.14); }
     .game-status { margin-top:16px; padding:14px 18px; border:3px solid var(--gold); border-radius:10px; background:linear-gradient(160deg,var(--parchment-1),var(--parchment-2)); box-shadow:0 12px 0 rgba(50,32,10,.2), 0 20px 40px rgba(0,0,0,.25); font-weight:900; text-align:center; color:var(--navy); }
 
@@ -207,7 +223,7 @@
     body[data-phase="playing"] .board-panel { min-height:calc(100vh - 142px); }
     body[data-phase="playing"] .side-panel { position:sticky; top:12px; padding:14px; max-height:calc(100vh - 138px); overflow:auto; gap:10px; }
     body[data-phase="playing"] .active-player { font-size:1.35rem; justify-content:center; width:100%; }
-    body[data-phase="playing"] .dice { width:94px; height:94px; font-size:3.4rem; margin:10px auto 14px; }
+    body[data-phase="playing"] .dice { min-width:94px; height:94px; font-size:2.6rem; margin:10px auto 14px; }
     body[data-phase="playing"] .turn-box .actions { grid-template-columns:1fr; }
     body[data-phase="playing"] .turn-box .actions button { min-height:54px; font-size:1.05rem; }
     body[data-phase="playing"] .turn-box .actions button:disabled { display:none; }
@@ -321,18 +337,29 @@
             <button class="light" id="endGame">마치기</button>
           </div>
           <div class="mission" id="missionText">이름을 넣고 참가하세요.</div>
-          <div class="dice" id="dice">⚀</div>
+          <div class="dice" id="dice">⚀ ⚀</div>
           <div class="actions">
             <button id="rollDice">🎲 주사위 굴리기</button>
             <button class="warn" id="showCard">🛂 카드 읽기</button>
             <button class="good" id="buySpace">🏠 마일리지로 사기</button>
             <button class="light" id="sellSpace">💰 팔기</button>
+            <button class="light" id="escapeIsland" style="display:none">🏝️ 20M 내고 탈출</button>
+            <button class="good" id="launchSpace" style="display:none">🚀 콜롬비아호 발사</button>
             <button class="wide dark" id="nextTurn">➡️ 차례 넘기기</button>
           </div>
+          <select id="launchTarget" style="display:none;margin-top:6px;"></select>
         </div>
         <div class="travel-card" id="travelCard">
           <b>여권 카드</b>
           <p>주사위를 굴리면 도착한 곳의 카드가 여기에 나타납니다.</p>
+        </div>
+        <div class="owned-panel" id="bankPanel">
+          <h2 style="margin:0 0 8px;font-size:1rem;">은행</h2>
+          <div id="bankInfo"></div>
+        </div>
+        <div class="owned-panel">
+          <h2 style="margin:0 0 8px;font-size:1rem;">내 소유 땅</h2>
+          <div class="owned-list" id="myProperties"></div>
         </div>
         <div class="scoreboard">
           <h2 style="margin:0 0 8px;font-size:1rem;">탐험 기록</h2>
@@ -358,10 +385,13 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
     let state = null;
     let myId = localStorage.getItem("worldBlueMarbleLanPlayerId") || "";
     let lastCardId = "";
+    let lastTollId = "";
     let roomCode = new URLSearchParams(location.search).get("room") || localStorage.getItem("worldBlueMarbleRoomCode") || "1";
 
     const board = document.getElementById("board");
@@ -401,19 +431,23 @@
     const continentEmoji = {"아시아":"🌏","아프리카":"🌍","북아메리카":"🗽","남아메리카":"🌴","남극 대륙":"🧊","오세아니아":"🏝️"};
     const oceanEmoji = {"태평양":"🌊","대서양":"⚓","인도양":"🐚","남극해":"🧊"};
     const conceptEmoji = {"위도":"🌐","경도":"🧭","대륙":"⛰️","디지털 지도":"💻","영토 특징":"📐","대양":"🌊"};
-    const tokenPieces = ["✈️","🚌","🚢","🚂","🎈","🛶"];
     const diceFaces = ["","⚀","⚁","⚂","⚃","⚄","⚅"];
+    const buildLevelNames = ["대지", "별장", "빌딩", "호텔"];
     function tileIcon(space) {
       if (space.type === "continent") return continentEmoji[space.name] || "🗺️";
       if (space.type === "ocean") return oceanEmoji[space.name] || "🌊";
       if (space.type === "quiz") return conceptEmoji[space.name] || "🧭";
       if (space.type === "chance") return "🔑";
       if (space.type === "start") return "🛫";
+      if (space.type === "island") return "🏝️";
+      if (space.type === "space") return "🚀";
+      if (space.type === "fund_pay") return "🏦";
+      if (space.type === "fund_take") return "🎁";
       return "🌍";
     }
     function pieceFor(playerId) {
-      const idx = state ? state.players.findIndex(pl => pl.id === playerId) : -1;
-      return tokenPieces[(idx < 0 ? 0 : idx) % tokenPieces.length];
+      const p = state && state.players.find(pl => pl.id === playerId);
+      return p ? [...p.name][0] : "?";
     }
     function boardPos(i) {
       if (i <= 8) return {gridColumn:i + 1, gridRow:1};
@@ -422,7 +456,7 @@
       return {gridColumn:1, gridRow:33 - i};
     }
     function kindLabel(type) {
-      return {start:"출발", quiz:"개념", country:"나라", ocean:"대양", continent:"대륙", chance:"황금열쇠"}[type] || "";
+      return {start:"출발", quiz:"개념", country:"나라", ocean:"대양", continent:"대륙", chance:"황금열쇠", island:"무인도", space:"우주여행", fund_pay:"기금 접수", fund_take:"기금 수령"}[type] || "";
     }
     function roomValue() {
       const value = document.getElementById("roomCode")?.value || roomCode || "1";
@@ -430,22 +464,46 @@
       localStorage.setItem("worldBlueMarbleRoomCode", roomCode);
       return roomCode;
     }
+    const BUILD_COST = [0, 40, 60, 80];
+    const BUILD_RENT_MULT = [1, 3, 6, 10];
     function isBuyable(space) {
       return space && ["country", "continent", "ocean"].includes(space.type);
     }
+    function isBuildable(space) {
+      return space && space.type === "country";
+    }
+    function buildingLevel(index) {
+      return (state && state.buildings && state.buildings[index]) || 0;
+    }
+    function nextBuildCost(index) {
+      const lvl = buildingLevel(index);
+      return lvl >= 3 ? null : BUILD_COST[lvl + 1];
+    }
+    function assetValue(index) {
+      const space = state.boardSpaces[index];
+      let value = propertyCost(space);
+      const lvl = buildingLevel(index);
+      for (let l = 1; l <= lvl; l++) value += BUILD_COST[l];
+      return value;
+    }
     function propertyCost(space) {
       if (!space) return 0;
-      if (space.type === "country") return 4;
-      if (space.type === "continent") return 5;
-      if (space.type === "ocean") return 6;
+      if (space.type === "country") return 40;
+      if (space.type === "continent") return 60;
+      if (space.type === "ocean") return 80;
       return 0;
     }
-    function propertyRent(space) {
+    function baseRent(space) {
       if (!space) return 0;
-      if (space.type === "country") return 2;
-      if (space.type === "continent") return 3;
-      if (space.type === "ocean") return 4;
+      if (space.type === "country") return 15;
+      if (space.type === "continent") return 25;
+      if (space.type === "ocean") return 35;
       return 0;
+    }
+    function propertyRent(space, index) {
+      if (!space) return 0;
+      const lvl = isBuildable(space) ? buildingLevel(index) : 0;
+      return baseRent(space) * BUILD_RENT_MULT[lvl];
     }
     function currentPlayer() {
       return state && state.players[state.current];
@@ -502,12 +560,13 @@
         cell.dataset.index = i;
         cell.style.gridColumn = pos.gridColumn;
         cell.style.gridRow = pos.gridRow;
-        const price = isBuyable(space) ? `<div class="meta">구입 ${propertyCost(space)}M · 통행료 ${propertyRent(space)}M</div>` : `<div class="meta">${space.meta || ""}</div>`;
+        const price = isBuyable(space) ? "" : `<div class="meta">${space.meta || ""}</div>`;
+        const meta = isBuyable(space) ? `<div class="meta meta-slot"></div>` : price;
         const code = countryCodes[space.name];
         const iconHtml = space.type === "country" && code
           ? `<span class="flag-badge"><img src="assets/flags/${code}.png" alt="${space.name} 국기" data-code="${code}" onerror="flagFallback(this)"></span>`
           : `<span class="emoji">${tileIcon(space)}</span>`;
-        cell.innerHTML = `<div><div class="kind">${iconHtml} ${kindLabel(space.type)}</div><div class="name">${space.name}</div>${price}</div><div class="owner-slot"></div><div class="tokens"></div>`;
+        cell.innerHTML = `<div><div class="kind">${iconHtml} ${kindLabel(space.type)}</div><div class="name">${space.name}</div>${meta}</div><div class="owner-slot"></div><div class="tokens"></div>`;
         board.appendChild(cell);
       });
       const center = document.createElement("div");
@@ -524,10 +583,16 @@
     }
     function updateOwners() {
       state.boardSpaces.forEach((space, i) => {
+        const metaSlot = document.querySelector(`.space[data-index="${i}"] .meta-slot`);
+        if (metaSlot && isBuyable(space)) {
+          const lvl = buildingLevel(i);
+          const lvlText = isBuildable(space) && lvl > 0 ? ` · ${buildLevelNames[lvl]}` : "";
+          metaSlot.textContent = `구입 ${propertyCost(space)} · 통행료 ${propertyRent(space, i)}${lvlText}`;
+        }
         const slot = document.querySelector(`.space[data-index="${i}"] .owner-slot`);
         if (!slot) return;
         const owner = state.players.find(p => state.properties && state.properties[i] === p.id);
-        slot.innerHTML = owner ? `<div class="owner">${owner.name} 소유</div>` : "";
+        slot.innerHTML = owner ? `<div class="owner" style="--owner-color:${owner.color}">${owner.name}</div>` : "";
       });
     }
     function renderTokens() {
@@ -553,7 +618,8 @@
         const row = document.createElement("div");
         row.className = `player ${idx === state.current && state.phase === "playing" ? "active" : ""} ${p.id === myId ? "mine" : ""}`;
         const place = state.boardSpaces[p.pos]?.name || "출발";
-        row.innerHTML = `<span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>도장 ${p.stamps.length}개 · 현재 ${place}</small></div><div class="score">${p.score}M</div>`;
+        const bankruptTag = p.bankrupt ? " · 파산" : "";
+        row.innerHTML = `<span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>도장 ${p.stamps.length}개 · 현재 ${place}${bankruptTag}</small></div><div class="score">${p.score}M</div>`;
         playersEl.appendChild(row);
       });
     }
@@ -566,8 +632,11 @@
       const ownerId = cp && state.properties ? state.properties[cp.pos] : null;
       const hasBuyRight = state.buyRights && state.buyRights[myId] === cp?.pos;
       const canManageLand = mine && state.rolled && (!pending || pending.answered) && isBuyable(currentSpace);
+      const stuck = mine && cp.island > 0;
+      const canLaunch = mine && cp.spaceTravel && !state.rolled && (!pending || pending.answered);
       activePlayerEl.innerHTML = cp ? `<span class="token" style="--piece:${cp.color}">${pieceFor(cp.id)}</span><span>${cp.name} 차례</span>` : "참가 대기 중";
-      diceEl.textContent = diceFaces[state ? state.dice : 1];
+      const diceArr = Array.isArray(state.dice) ? state.dice : [state.dice, state.dice];
+      diceEl.textContent = `${diceFaces[diceArr[0]] || "⚀"} ${diceFaces[diceArr[1]] || "⚀"}`;
       document.getElementById("rollDice").disabled = !(mine && !state.rolled && !pending);
       document.getElementById("showCard").disabled = !(pending && pending.playerId === myId);
       document.getElementById("buySpace").disabled = !(canManageLand && hasBuyRight && !ownerId && cp.score >= propertyCost(currentSpace));
@@ -579,20 +648,65 @@
       document.getElementById("joinButton").disabled = state.phase !== "lobby" || state.players.length >= 6;
       timeLeftEl.textContent = timeText(state.secondsLeft);
       document.getElementById("setup").style.display = state.phase === "finished" ? "grid" : "grid";
+
+      const escapeBtn = document.getElementById("escapeIsland");
+      escapeBtn.style.display = stuck ? "block" : "none";
+      escapeBtn.disabled = !(stuck && cp.score >= 20 || stuck);
+      const launchBtn = document.getElementById("launchSpace");
+      const launchSelect = document.getElementById("launchTarget");
+      launchBtn.style.display = canLaunch ? "block" : "none";
+      launchSelect.style.display = canLaunch ? "block" : "none";
+      if (canLaunch && launchSelect.dataset.filled !== "1") {
+        launchSelect.innerHTML = state.boardSpaces.map((s, i) => `<option value="${i}">${s.name}</option>`).join("");
+        launchSelect.dataset.filled = "1";
+      }
+      if (!canLaunch) launchSelect.dataset.filled = "0";
+
+      renderBank(cp, mine);
+
       const missionEl = document.getElementById("missionText");
       const statusEl = document.getElementById("gameStatus");
       let mission = "이름을 넣고 참가하세요.";
       if (state.phase === "lobby") mission = state.players.length < 2 ? "2명 이상 모이면 시작할 수 있어요." : "게임 시작을 눌러 여행을 떠나세요.";
       else if (state.phase === "finished") mission = "게임이 끝났습니다. 결과를 확인하세요.";
       else if (!mine) mission = `${cp?.name || "친구"} 차례를 기다리세요.`;
-      else if (!state.rolled) mission = "주사위를 굴리세요.";
+      else if (stuck) mission = `무인도에 갇혔어요! 더블이 나오면 탈출, 아니면 20M을 내고 탈출할 수 있어요. (남은 턴 ${cp.island})`;
+      else if (canLaunch) mission = "콜롬비아호 발사 준비 완료! 이동할 곳을 고르고 발사하거나, 그냥 주사위를 굴려도 돼요.";
+      else if (!state.rolled) mission = "주사위 두 개를 굴리세요. 더블이 나오면 한 번 더 굴릴 수 있어요.";
       else if (pending && pending.playerId === myId && !pending.answered) mission = "카드를 읽고 정답을 고르세요.";
-      else if (hasBuyRight && !ownerId) mission = `${currentSpace.name}을 ${propertyCost(currentSpace)}마일리지로 살 수 있어요. 친구가 오면 ${propertyRent(currentSpace)}마일리지를 받아요.`;
+      else if (hasBuyRight && !ownerId) mission = `${currentSpace.name}을 ${propertyCost(currentSpace)}M로 살 수 있어요. 친구가 오면 ${propertyRent(currentSpace, cp.pos)}M 통행료를 받아요.`;
       else mission = "다음 차례로 넘기세요.";
       missionEl.textContent = mission;
       statusEl.textContent = state.phase === "playing"
-        ? `현재 위치: ${cp ? state.boardSpaces[cp.pos].name : "-"} · ${cp ? `${cp.name} 마일리지 ${cp.score}M` : ""} · 내 땅에 친구가 오면 통행료를 받아요.`
-        : `방 ${state.roomCode || roomCode} · 2~6명이 참가합니다. 시작 마일리지는 20M입니다.`;
+        ? `${state.era} · 현재 위치: ${cp ? state.boardSpaces[cp.pos].name : "-"} · ${cp ? `${cp.name} ${cp.score}M` : ""}`
+        : `방 ${state.roomCode || roomCode} · 2~6명이 참가합니다.`;
+    }
+    function renderBank(cp, mine) {
+      const bankInfo = document.getElementById("bankInfo");
+      if (!bankInfo || state.phase !== "playing") { if (bankInfo) bankInfo.innerHTML = ""; return; }
+      const me = state.players.find(p => p.id === myId);
+      let html = `<p style="margin:0 0 8px;color:var(--muted);font-size:.82rem;">사회복지기금 ${state.welfareFund}M 적립 중 · ${state.era}</p>`;
+      if (state.loanRequest) {
+        const req = state.loanRequest;
+        if (req.playerId === myId) {
+          html += `<p style="margin:0;font-weight:800;">내 대출 ${req.amount}M 신청 중... 친구의 동의를 기다려요.</p>`;
+        } else {
+          html += `<div class="owned-row"><span>${req.playerName}의 대출 ${req.amount}M</span><button class="good" id="approveLoanBtn">동의하기</button></div>`;
+        }
+      } else if (me && !me.loanUsed) {
+        html += `<div class="owned-row"><span>은행 대출 (최대 100M, 1회)</span><button class="light" id="requestLoanBtn">신청하기</button></div>`;
+      } else if (me && me.loanAmount > 0) {
+        html += `<p style="margin:0;color:var(--rose);font-weight:800;">대출 ${me.loanAmount}M · ${me.loanTurnsLeft}턴 안에 상환해야 해요.</p>`;
+      }
+      bankInfo.innerHTML = html;
+      const approveBtn = document.getElementById("approveLoanBtn");
+      if (approveBtn) approveBtn.onclick = async () => { try { await api("approveLoan"); } catch (err) { alert(err.message); } };
+      const requestBtn = document.getElementById("requestLoanBtn");
+      if (requestBtn) requestBtn.onclick = async () => {
+        const amt = prompt("대출받을 금액을 입력하세요 (최대 100M)", "100");
+        if (!amt) return;
+        try { await api("requestLoan", {amount: Number(amt)}); } catch (err) { alert(err.message); }
+      };
     }
     function renderLog() {
       logEl.innerHTML = "";
@@ -615,11 +729,62 @@
       renderPlayers();
       renderControls();
       renderTravelCard();
+      renderMyProperties();
       renderLog();
       renderRoom();
+      checkTollEvent();
       if (state.phase === "finished") showResults();
-      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) lastCardId = state.pendingCard.id;
+      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) showCard();
       else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
+    }
+    function renderMyProperties() {
+      const panel = document.getElementById("myProperties");
+      if (!panel || !state) return;
+      const owned = Object.entries(state.properties || {})
+        .filter(([, ownerId]) => ownerId === myId)
+        .map(([idx]) => Number(idx));
+      if (!owned.length) {
+        panel.innerHTML = `<p class="empty-note">아직 소유한 땅이 없어요.</p>`;
+        return;
+      }
+      const canSell = isMyTurn();
+      const canBuild = isMyTurn() && !state.rolled;
+      panel.innerHTML = owned.map(idx => {
+        const space = state.boardSpaces[idx];
+        const lvl = buildingLevel(idx);
+        const refund = Math.ceil(assetValue(idx) * 0.7);
+        const buildCost = nextBuildCost(idx);
+        const buildBtn = isBuildable(space) && buildCost !== null
+          ? `<button class="good build-owned" data-index="${idx}" ${canBuild ? "" : "disabled"}>${buildLevelNames[lvl + 1]} 짓기 -${buildCost}M</button>`
+          : "";
+        return `<div class="owned-row"><span>${space.name}${lvl ? ` (${buildLevelNames[lvl]})` : ""}</span><div style="display:flex;gap:6px;">${buildBtn}<button class="light sell-owned" data-index="${idx}" ${canSell ? "" : "disabled"}>팔기 +${refund}M</button></div></div>`;
+      }).join("");
+      panel.querySelectorAll(".sell-owned").forEach(btn => {
+        btn.onclick = async () => {
+          try { await api("sell", {index: Number(btn.dataset.index)}); }
+          catch (err) { alert(err.message); }
+        };
+      });
+      panel.querySelectorAll(".build-owned").forEach(btn => {
+        btn.onclick = async () => {
+          try { await api("build", {index: Number(btn.dataset.index)}); }
+          catch (err) { alert(err.message); }
+        };
+      });
+    }
+    function showToast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => el.classList.remove("show"), 2600);
+    }
+    function checkTollEvent() {
+      const t = state.tollEvent;
+      if (!t || t.id === lastTollId) return;
+      lastTollId = t.id;
+      if (t.payerId === myId) showToast(`💸 ${t.ownerName}에게 ${t.spaceName} 통행료 ${t.amount}M을 냈습니다.`);
+      else if (t.ownerId === myId) showToast(`💰 ${t.payerName}에게서 ${t.spaceName} 통행료 ${t.amount}M을 받았습니다.`);
     }
     function renderTravelCard() {
       const panel = document.getElementById("travelCard");
@@ -630,7 +795,7 @@
       if (!card) {
         panel.className = "travel-card empty";
         const landText = currentSpace && isBuyable(currentSpace)
-          ? `<p>구입 ${propertyCost(currentSpace)}M · 통행료 ${propertyRent(currentSpace)}M</p>`
+          ? `<p>구입 ${propertyCost(currentSpace)}M · 통행료 ${propertyRent(currentSpace, cp.pos)}M</p>`
           : "";
         panel.innerHTML = `<b>🛂 여권 카드</b><p>${currentSpace ? `현재 여행지는 ${currentSpace.name}입니다.` : "주사위를 굴리면 도착 카드가 여기에 나타납니다."}</p>${landText}`;
         return;
@@ -638,16 +803,27 @@
       panel.className = "travel-card";
       if (card.playerId !== myId) {
         const owner = state.players.find(p => p.id === card.playerId);
-        panel.innerHTML = `<b>🛂 ${owner ? owner.name : "친구"}의 카드</b><p>친구가 카드를 해결하는 중입니다. 잠깐 기다리세요.</p>`;
+        panel.innerHTML = `<b>🛂 ${owner ? owner.name : "친구"}의 카드</b><p>친구가 카드를 확인하는 중입니다. 잠깐 기다리세요.</p>`;
         return;
       }
+      panel.innerHTML = `<b>🔔 카드가 도착했어요</b><p>${card.type === "chance" ? card.title : `${card.space.name} 미션`}이 팝업으로 떴어요. 안 보이면 "카드 읽기" 버튼을 눌러주세요.</p>`;
+    }
+    function showCard() {
+      const card = state.pendingCard;
+      if (!card) return;
+      lastCardId = card.id;
+      modal.dataset.auto = "card";
+      modalTitle.textContent = card.type === "quiz" ? `${card.space.name} 카드` : card.title;
       if (card.type === "chance") {
-        panel.innerHTML = `<b>🔑 ${card.title}</b><p>${card.text}</p><p>황금열쇠 효과가 바로 적용되었습니다.</p>`;
+        modalBody.innerHTML = `<p class="question">${card.text}</p><div class="explain">황금열쇠 효과가 바로 적용되었습니다.</div>`;
+        modalActions.innerHTML = `<button id="doneCard">확인</button>`;
+        document.getElementById("doneCard").onclick = closeModal;
+        openModal();
         return;
       }
-      const buyInfo = isBuyable(card.space) ? ` 정답을 맞히면 ${propertyCost(card.space)}M으로 사고, 친구가 오면 ${propertyRent(card.space)}M 통행료를 받아요.` : "";
-      panel.innerHTML = `<b>🧭 ${card.space.name} 미션</b><p>${card.question}</p><div class="choices"></div><div class="explain">${card.answered ? card.explain : `정답을 맞히면 2M을 얻습니다.${buyInfo}`}</div>`;
-      const choices = panel.querySelector(".choices");
+      const buyInfo = isBuyable(card.space) ? ` 정답을 맞히면 ${propertyCost(card.space)}M으로 사고, 친구가 오면 ${propertyRent(card.space, card.space.index)}M 통행료를 받아요.` : "";
+      modalBody.innerHTML = `<p class="question">${card.question}</p><div class="choices"></div><div class="explain">${card.answered ? card.explain : `정답을 맞히면 2M을 얻습니다.${buyInfo}`}</div>`;
+      const choices = modalBody.querySelector(".choices");
       card.choices.forEach((text, idx) => {
         const btn = document.createElement("button");
         btn.className = "choice";
@@ -658,24 +834,21 @@
           if (idx === card.chosen && idx !== card.correct) btn.classList.add("wrong");
         } else {
           btn.onclick = async () => {
-            try { await api("answer", {choice:idx}); }
+            try { await api("answer", {choice:idx}); showCard(); }
             catch (err) { alert(err.message); }
           };
         }
         choices.appendChild(btn);
       });
-    }
-    function showCard() {
-      const card = state.pendingCard;
-      if (!card) return;
-      lastCardId = card.id;
-      renderTravelCard();
+      modalActions.innerHTML = `<button id="doneCard" ${card.answered ? "" : "disabled"}>확인</button>`;
+      document.getElementById("doneCard").onclick = closeModal;
+      openModal();
     }
     function showResults() {
       if (modal.dataset.auto === "result") return;
       modal.dataset.auto = "result";
       modalTitle.textContent = "최종 결과";
-      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${i + 1}위 ${p.name}</b><small>도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳</small></div><b>${p.score}M</b></div>`).join("")}</div>`;
+      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${i + 1}위 ${p.name}${p.bankrupt ? " (파산)" : ""}</b><small>도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳 · 현금 ${p.score}M</small></div><b>총 자산 ${p.netWorth}M</b></div>`).join("")}</div>`;
       modalActions.innerHTML = `<button class="good" id="closeResult">확인</button>`;
       document.getElementById("closeResult").onclick = closeModal;
       openModal();
@@ -713,6 +886,11 @@
     document.getElementById("showCard").onclick = showCard;
     document.getElementById("buySpace").onclick = async () => { try { await api("buy"); } catch (err) { alert(err.message); } };
     document.getElementById("sellSpace").onclick = async () => { try { await api("sell"); } catch (err) { alert(err.message); } };
+    document.getElementById("escapeIsland").onclick = async () => { try { await api("escapeIsland"); } catch (err) { alert(err.message); } };
+    document.getElementById("launchSpace").onclick = async () => {
+      const target = Number(document.getElementById("launchTarget").value);
+      try { await api("launch", {targetIndex: target}); } catch (err) { alert(err.message); }
+    };
     document.getElementById("nextTurn").onclick = async () => { try { await api("next"); } catch (err) { alert(err.message); } };
     document.getElementById("closeModal").onclick = closeModal;
 
