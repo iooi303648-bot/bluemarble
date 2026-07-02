@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>지구 여행 블루마블 LAN</title>
+  <style>
+    :root {
+      --ink:#172033; --muted:#667085; --line:#d7deea; --blue:#1677c7;
+      --green:#1f9d72; --yellow:#f4b63d; --rose:#e85d75; --ocean:#dff5ff;
+      --shadow:0 18px 45px rgba(31,45,73,.12);
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; color:var(--ink);
+      font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(22,119,199,.12), transparent 28rem),
+        radial-gradient(circle at 82% 18%, rgba(31,157,114,.13), transparent 25rem),
+        linear-gradient(180deg,#f7fbff 0%,#eef6fb 100%);
+    }
+    button,input { font:inherit; }
+    button {
+      border:0; border-radius:8px; padding:.72rem .9rem; background:var(--blue);
+      color:#fff; font-weight:900; cursor:pointer; box-shadow:0 9px 20px rgba(22,119,199,.18);
+    }
+    button:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+    button.light { background:#eef4fb; color:var(--ink); box-shadow:none; border:1px solid var(--line); }
+    button.good { background:var(--green); }
+    button.warn { background:var(--yellow); color:#2b2008; }
+    button.dark { background:#23324d; }
+    .app { width:min(1420px,calc(100vw - 28px)); margin:0 auto; padding:18px 0 26px; }
+    header { display:grid; grid-template-columns:1fr auto; gap:16px; align-items:end; margin-bottom:14px; }
+    h1 { margin:0; font-size:clamp(1.7rem,3vw,3.2rem); line-height:1.05; letter-spacing:0; }
+    .subtitle { margin:.45rem 0 0; color:var(--muted); font-weight:800; }
+    .timer { min-width:178px; padding:12px 16px; border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,.84); text-align:center; box-shadow:var(--shadow); }
+    .timer strong { display:block; font-size:2rem; }
+    .setup,.board-panel,.side-panel,.join-card { border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,.92); box-shadow:var(--shadow); }
+    .setup { margin-bottom:14px; padding:14px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end; }
+    .join-card { padding:14px; display:grid; gap:10px; }
+    .join-line { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
+    input { width:100%; border:1px solid var(--line); border-radius:8px; padding:.68rem .75rem; font-weight:900; }
+    .room { color:var(--muted); font-weight:800; line-height:1.45; }
+    .layout { display:grid; grid-template-columns:minmax(620px,1fr) 390px; gap:16px; align-items:start; }
+    .board-panel { position:relative; overflow:hidden; padding:14px; }
+    .world-map { position:absolute; inset:10% 8%; opacity:.16; pointer-events:none; }
+    .world-map path { fill:#2c8fbf; }
+    .board { position:relative; display:grid; grid-template-columns:repeat(9,minmax(58px,1fr)); grid-template-rows:repeat(9,minmax(58px,1fr)); gap:6px; min-height:min(76vh,760px); z-index:1; }
+    .space { position:relative; min-height:58px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:6px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; }
+    .space.center { grid-column:3/8; grid-row:3/8; justify-content:center; padding:18px; background:linear-gradient(135deg,rgba(223,245,255,.88),rgba(255,255,255,.86)); }
+    .space.start { background:#fff7d7; border-color:#f2d176; }
+    .space.quiz { background:#f1f8ff; border-color:#a8cdf0; }
+    .space.chance { background:#fff2f5; border-color:#efb2bf; }
+    .space.ocean { background:var(--ocean); border-color:#94d5ec; }
+    .space.country { background:#f8fff8; border-color:#afe0c9; }
+    .space.continent { background:#fff9ea; border-color:#edd08a; }
+    .space.current { outline:3px solid rgba(22,119,199,.38); }
+    .kind { font-size:.7rem; color:var(--muted); font-weight:900; }
+    .name { font-size:.84rem; font-weight:900; line-height:1.18; }
+    .meta { font-size:.68rem; color:var(--muted); line-height:1.2; }
+    .tokens { min-height:18px; display:flex; flex-wrap:wrap; gap:3px; align-items:center; }
+    .token { width:17px; height:17px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.24); }
+    .center-title { margin:0 0 8px; font-size:clamp(1.4rem,2.2vw,2.5rem); line-height:1.08; }
+    .center-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+    .mini { border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,.72); padding:9px; min-height:78px; }
+    .mini b { display:block; margin-bottom:4px; }
+    .mini span { color:var(--muted); font-size:.84rem; line-height:1.35; }
+    .side-panel { display:grid; gap:12px; padding:14px; }
+    .turn-box { border:1px solid var(--line); border-radius:8px; padding:12px; background:#fff; }
+    .turn-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .active-player { display:flex; gap:9px; align-items:center; font-weight:900; font-size:1.1rem; }
+    .dice { width:68px; height:68px; display:grid; place-items:center; border-radius:8px; background:#fff; border:2px solid #1f2d49; font-size:2rem; font-weight:900; box-shadow:0 8px 0 #d5dbe8; margin:8px auto 12px; }
+    .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .actions .wide { grid-column:1/-1; }
+    .players { display:grid; gap:8px; }
+    .player { display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding:8px; border-radius:8px; border:1px solid var(--line); background:#fff; }
+    .player.active { border-color:var(--blue); box-shadow:0 0 0 3px rgba(22,119,199,.12); }
+    .player.mine { background:#f5fff9; }
+    .player small { display:block; color:var(--muted); font-weight:800; }
+    .score { text-align:right; font-weight:900; }
+    .log { height:148px; overflow:auto; border:1px solid var(--line); border-radius:8px; background:#f9fbff; padding:8px; font-size:.86rem; line-height:1.45; }
+    .log p { margin:0 0 6px; }
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(16,24,40,.42); z-index:20; }
+    .modal.open { display:flex; }
+    .dialog { width:min(620px,100%); border-radius:8px; background:#fff; border:1px solid var(--line); box-shadow:0 28px 70px rgba(16,24,40,.28); overflow:hidden; }
+    .dialog-head { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:14px 16px; background:#f3f7fb; border-bottom:1px solid var(--line); }
+    .dialog-head h2 { margin:0; font-size:1.2rem; }
+    .dialog-body { padding:16px; }
+    .question { font-size:1.1rem; line-height:1.55; margin:0 0 14px; font-weight:900; }
+    .choices { display:grid; gap:8px; margin-bottom:12px; }
+    .choice { width:100%; text-align:left; background:#fff; color:var(--ink); border:1px solid var(--line); box-shadow:none; font-weight:900; }
+    .choice.correct { border-color:var(--green); background:#e9fbf3; }
+    .choice.wrong { border-color:var(--rose); background:#fff0f3; }
+    .explain { min-height:46px; border-radius:8px; background:#f7fafc; border:1px solid var(--line); padding:10px; color:#344054; line-height:1.45; }
+    .dialog-actions { display:flex; gap:8px; justify-content:flex-end; padding:0 16px 16px; }
+    .results { display:grid; gap:8px; margin-top:12px; }
+    .result-row { display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:10px; background:#fff; }
+    body {
+      background:
+        linear-gradient(rgba(5, 28, 56, .18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(5, 28, 56, .16) 1px, transparent 1px),
+        radial-gradient(circle at 16% 10%, rgba(249, 190, 62, .55), transparent 16rem),
+        radial-gradient(circle at 84% 18%, rgba(28, 178, 211, .45), transparent 18rem),
+        linear-gradient(135deg, #07558f 0%, #0b7db0 38%, #0c9eb1 100%);
+      background-size: 42px 42px, 42px 42px, auto, auto, auto;
+    }
+    .app {
+      width:min(1480px,calc(100vw - 28px));
+    }
+    header {
+      padding: 18px 20px;
+      border: 1px solid rgba(255,255,255,.38);
+      border-radius: 8px;
+      background: rgba(255,255,255,.18);
+      color: #fff;
+      box-shadow: 0 20px 50px rgba(0,24,60,.22);
+      backdrop-filter: blur(8px);
+    }
+    h1 {
+      text-shadow: 0 3px 0 rgba(0,0,0,.16);
+    }
+    .subtitle {
+      color: rgba(255,255,255,.88);
+    }
+    .timer {
+      color: #102033;
+      border: 3px solid #fff;
+      background: linear-gradient(180deg,#fff 0%,#dff5ff 100%);
+      box-shadow: 0 12px 0 rgba(1,60,102,.25), 0 22px 44px rgba(0,0,0,.18);
+    }
+    .setup,.side-panel,.join-card {
+      border: 3px solid rgba(255,255,255,.75);
+      background: rgba(255,255,255,.94);
+      box-shadow: 0 16px 0 rgba(4,68,116,.18), 0 24px 52px rgba(0,26,62,.2);
+    }
+    .board-panel {
+      padding: 18px;
+      border: 4px solid #fff;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.85), rgba(255,255,255,.28) 37%, transparent 38%),
+        linear-gradient(135deg,#b7ecff 0%,#75d2f0 45%,#40b8d8 100%);
+      box-shadow: 0 18px 0 rgba(4,68,116,.24), 0 28px 60px rgba(0,22,54,.24);
+    }
+    .world-map {
+      inset: 15% 12%;
+      opacity: .24;
+      filter: drop-shadow(0 10px 8px rgba(0,72,104,.16));
+    }
+    .world-map path {
+      fill: #52a95f;
+    }
+    .board {
+      gap: 8px;
+    }
+    .space {
+      border: 2px solid rgba(255,255,255,.95);
+      border-radius: 8px;
+      box-shadow: 0 7px 0 rgba(15,69,104,.18), 0 12px 22px rgba(0,0,0,.12);
+      transform: translateY(0);
+    }
+    .space::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 8px;
+      background: #1b8ed3;
+    }
+    .space.start::before { background: #f0b429; }
+    .space.quiz::before { background: #1b8ed3; }
+    .space.country::before { background: #21a67a; }
+    .space.ocean::before { background: #25b7d3; }
+    .space.continent::before { background: #f08b3e; }
+    .space.chance::before { background: #e85d75; }
+    .space.current {
+      outline: 4px solid #ffe66d;
+      box-shadow: 0 0 0 5px rgba(255,230,109,.28), 0 9px 0 rgba(15,69,104,.18), 0 18px 26px rgba(0,0,0,.16);
+    }
+    .kind {
+      margin-top: 4px;
+      color: #38506b;
+    }
+    .name {
+      font-size: .9rem;
+    }
+    .token {
+      width: 19px;
+      height: 19px;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 0 rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.3);
+    }
+    .space.center {
+      border: 4px solid rgba(255,255,255,.95);
+      background:
+        radial-gradient(circle at 50% 39%, rgba(255,255,255,.18) 0 9%, transparent 10%),
+        radial-gradient(circle at 50% 42%, #1b9ed7 0 31%, #0a78b8 32% 42%, transparent 43%),
+        radial-gradient(circle at 42% 34%, #5fbf62 0 7%, transparent 8%),
+        radial-gradient(circle at 58% 46%, #73c26b 0 9%, transparent 10%),
+        linear-gradient(135deg, rgba(255,255,255,.94), rgba(225,247,255,.9));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), 0 12px 0 rgba(15,69,104,.18);
+    }
+    .center-title {
+      max-width: 620px;
+      text-shadow: 0 2px 0 rgba(255,255,255,.7);
+    }
+    .mini {
+      border: 2px solid rgba(16,70,111,.12);
+      background: rgba(255,255,255,.88);
+      box-shadow: 0 5px 0 rgba(15,69,104,.09);
+    }
+    button {
+      border: 2px solid rgba(255,255,255,.65);
+      box-shadow: 0 7px 0 rgba(0,57,104,.22), 0 14px 20px rgba(0,0,0,.12);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 4px 0 rgba(0,57,104,.22), 0 9px 14px rgba(0,0,0,.12);
+    }
+    button.light {
+      border: 2px solid #d5e7f4;
+      background: #f7fcff;
+    }
+    .turn-box,.player,.log {
+      border: 2px solid #d8e8f4;
+      box-shadow: 0 6px 0 rgba(24,73,106,.08);
+    }
+    .dice {
+      border: 4px solid #193257;
+      background:
+        radial-gradient(circle at 25% 25%, rgba(255,255,255,.95), transparent 28%),
+        linear-gradient(135deg,#fff,#e6f3ff);
+      box-shadow: 0 10px 0 #b8cce0, 0 20px 24px rgba(0,0,0,.16);
+    }
+    .modal {
+      background: rgba(0,38,78,.56);
+    }
+    .dialog {
+      border: 4px solid #fff;
+      box-shadow: 0 18px 0 rgba(4,68,116,.22), 0 30px 70px rgba(0,0,0,.28);
+    }
+    .dialog-head {
+      background: linear-gradient(135deg,#fff7d6,#dff5ff);
+    }
+    .choice {
+      border: 2px solid #d9e8f4;
+      box-shadow: 0 5px 0 rgba(24,73,106,.08);
+    }
+    @media (max-width:1050px) {
+      .layout { grid-template-columns:1fr; }
+      .side-panel { grid-template-columns:1fr 1fr; }
+      .log { height:180px; }
+    }
+    @media (max-width:760px) {
+      .app { width:min(100vw - 16px,720px); padding-top:10px; }
+      header,.setup,.side-panel,.join-line { grid-template-columns:1fr; }
+      .board { grid-template-columns:repeat(9,minmax(34px,1fr)); grid-template-rows:repeat(9,minmax(45px,1fr)); gap:4px; min-height:540px; }
+      .space { min-height:45px; padding:4px; }
+      .space.center { padding:10px; }
+      .kind,.meta { display:none; }
+      .name { font-size:.66rem; }
+      .center-grid { grid-template-columns:1fr; }
+      .mini { min-height:auto; }
+      .timer { min-width:0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>지구 여행 블루마블</h1>
+        <p class="subtitle">같은 와이파이에서 각자 기기로 플레이</p>
+      </div>
+      <div class="timer"><span>남은 시간</span><strong id="timeLeft">20:00</strong></div>
+    </header>
+
+    <section class="setup" id="setup">
+      <div class="join-card">
+        <div class="room" id="roomInfo">이 주소를 같은 와이파이에 연결된 기기에서 열고 참가하세요.</div>
+        <div class="join-line">
+          <input id="playerName" maxlength="8" placeholder="이름">
+          <button class="good" id="joinButton">참가</button>
+          <button class="light" id="leaveButton">내 기기 초기화</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="good" id="startGame">게임 시작</button>
+        <button class="light" id="resetGame">새 방</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="board-panel">
+        <svg class="world-map" viewBox="0 0 900 430" aria-hidden="true">
+          <path d="M108 95l42-30 75 8 42 28 9 40-58 28-74-12-48-20zM315 68l75-26 110 18 66 54-25 55-88 14-72-24-61 18-40-44zM585 83l96-14 61 29 35 54-39 34-87-8-55-36zM424 198l55 8 37 45-12 72-43 54-50-31-15-70zM598 231l88-22 82 44 17 75-54 44-103-14-58-68zM195 236l70 11 48 43-22 73-74 25-62-40-9-64z"/>
+        </svg>
+        <div class="board" id="board"></div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="turn-box">
+          <div class="turn-head">
+            <div class="active-player" id="activePlayer">대기 중</div>
+            <button class="light" id="endGame">마치기</button>
+          </div>
+          <div class="dice" id="dice">1</div>
+          <div class="actions">
+            <button id="rollDice">주사위</button>
+            <button class="warn" id="showCard">카드 보기</button>
+            <button class="wide dark" id="nextTurn">다음 차례</button>
+          </div>
+        </div>
+        <div>
+          <h2 style="margin:0 0 8px;font-size:1rem;">탐험 기록</h2>
+          <div class="players" id="players"></div>
+        </div>
+        <div style="grid-column:1/-1;">
+          <h2 style="margin:0 0 8px;font-size:1rem;">진행 알림</h2>
+          <div class="log" id="log"></div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h2 id="modalTitle">카드</h2>
+        <button class="light" id="closeModal">닫기</button>
+      </div>
+      <div class="dialog-body" id="modalBody"></div>
+      <div class="dialog-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <script>
+    let state = null;
+    let myId = localStorage.getItem("worldBlueMarbleLanPlayerId") || "";
+    let lastCardId = "";
+
+    const board = document.getElementById("board");
+    const playersEl = document.getElementById("players");
+    const logEl = document.getElementById("log");
+    const activePlayerEl = document.getElementById("activePlayer");
+    const diceEl = document.getElementById("dice");
+    const timeLeftEl = document.getElementById("timeLeft");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalActions = document.getElementById("modalActions");
+
+    function boardPos(i) {
+      if (i <= 8) return {gridColumn:i + 1, gridRow:1};
+      if (i <= 16) return {gridColumn:9, gridRow:i - 7};
+      if (i <= 24) return {gridColumn:25 - i, gridRow:9};
+      return {gridColumn:1, gridRow:33 - i};
+    }
+    function kindLabel(type) {
+      return {start:"출발", quiz:"개념", country:"나라", ocean:"대양", continent:"대륙", chance:"소식"}[type] || "";
+    }
+    function scoreOf(p) {
+      return p.score + p.stamps.length * 3 + new Set(p.continents).size * 2;
+    }
+    function currentPlayer() {
+      return state && state.players[state.current];
+    }
+    function isMyTurn() {
+      const p = currentPlayer();
+      return !!p && p.id === myId && state.phase === "playing";
+    }
+    function timeText(seconds) {
+      const m = Math.max(0, Math.floor(seconds / 60)).toString().padStart(2, "0");
+      const s = Math.max(0, seconds % 60).toString().padStart(2, "0");
+      return `${m}:${s}`;
+    }
+    async function api(action, data = {}) {
+      const res = await fetch("/api/action", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action, playerId:myId, ...data})
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "요청 실패");
+      if (json.playerId) {
+        myId = json.playerId;
+        localStorage.setItem("worldBlueMarbleLanPlayerId", myId);
+      }
+      state = json.state;
+      render();
+    }
+    async function refresh() {
+      try {
+        const res = await fetch("/api/state", {cache:"no-store"});
+        state = await res.json();
+        render();
+      } catch (err) {
+        activePlayerEl.textContent = "서버 연결 대기 중";
+      }
+    }
+    function renderBoard() {
+      if (!state || !state.boardSpaces) return;
+      board.innerHTML = "";
+      state.boardSpaces.forEach((space, i) => {
+        const pos = boardPos(i);
+        const cell = document.createElement("div");
+        cell.className = `space ${space.type}`;
+        cell.dataset.index = i;
+        cell.style.gridColumn = pos.gridColumn;
+        cell.style.gridRow = pos.gridRow;
+        cell.innerHTML = `<div><div class="kind">${kindLabel(space.type)}</div><div class="name">${space.name}</div><div class="meta">${space.meta || ""}</div></div><div class="tokens"></div>`;
+        board.appendChild(cell);
+      });
+      const center = document.createElement("div");
+      center.className = "space center";
+      center.innerHTML = `
+        <h2 class="center-title">대륙과 대양을 지나 나라 도장을 모으세요</h2>
+        <div class="center-grid">
+          <div class="mini"><b>내 기기</b><span>이름을 넣고 참가하면 자기 차례에만 주사위와 카드 버튼이 열립니다.</span></div>
+          <div class="mini"><b>시간</b><span>20분이 지나거나 마치기를 누르면 점수로 승부합니다.</span></div>
+          <div class="mini"><b>점수</b><span>정답 2점, 나라 도장 3점, 새 대륙 2점입니다.</span></div>
+        </div>`;
+      board.appendChild(center);
+    }
+    function renderTokens() {
+      document.querySelectorAll(".space").forEach(s => s.classList.remove("current"));
+      document.querySelectorAll(".tokens").forEach(t => t.innerHTML = "");
+      if (!state) return;
+      state.players.forEach((p, idx) => {
+        const cell = document.querySelector(`.space[data-index="${p.pos}"]`);
+        if (!cell) return;
+        const token = document.createElement("span");
+        token.className = "token";
+        token.style.background = p.color;
+        token.title = p.name;
+        cell.querySelector(".tokens").appendChild(token);
+        if (idx === state.current && state.phase === "playing") cell.classList.add("current");
+      });
+    }
+    function renderPlayers() {
+      playersEl.innerHTML = "";
+      if (!state) return;
+      state.players.forEach((p, idx) => {
+        const row = document.createElement("div");
+        row.className = `player ${idx === state.current && state.phase === "playing" ? "active" : ""} ${p.id === myId ? "mine" : ""}`;
+        const place = state.boardSpaces[p.pos]?.name || "출발";
+        row.innerHTML = `<span class="token" style="background:${p.color}"></span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>도장 ${p.stamps.length}개 · 현재 ${place}</small></div><div class="score">${scoreOf(p)}점</div>`;
+        playersEl.appendChild(row);
+      });
+    }
+    function renderControls() {
+      const cp = currentPlayer();
+      const mine = isMyTurn();
+      const pending = state && state.pendingCard;
+      activePlayerEl.innerHTML = cp ? `<span class="token" style="background:${cp.color}"></span><span>${cp.name} 차례</span>` : "참가 대기 중";
+      diceEl.textContent = state ? state.dice : "1";
+      document.getElementById("rollDice").disabled = !(mine && !state.rolled && !pending);
+      document.getElementById("showCard").disabled = !(pending && pending.playerId === myId);
+      document.getElementById("nextTurn").disabled = !(mine && state.rolled && (!pending || pending.answered));
+      document.getElementById("startGame").disabled = !(state.phase === "lobby" && state.players.length >= 2);
+      document.getElementById("resetGame").disabled = false;
+      document.getElementById("endGame").disabled = state.phase !== "playing";
+      document.getElementById("joinButton").disabled = state.phase !== "lobby" || state.players.length >= 6;
+      timeLeftEl.textContent = timeText(state.secondsLeft);
+      document.getElementById("setup").style.display = state.phase === "finished" ? "grid" : "grid";
+    }
+    function renderLog() {
+      logEl.innerHTML = "";
+      (state.logs || []).slice(0, 20).forEach(item => {
+        const p = document.createElement("p");
+        p.textContent = item;
+        logEl.appendChild(p);
+      });
+    }
+    function renderRoom() {
+      const me = state.players.find(p => p.id === myId);
+      const status = state.phase === "lobby" ? "참가 대기" : state.phase === "playing" ? "게임 중" : "게임 종료";
+      document.getElementById("roomInfo").textContent = `${location.origin} · ${status} · 참가 ${state.players.length}/6명${me ? ` · 내 이름: ${me.name}` : ""}`;
+    }
+    function render() {
+      if (!state) return;
+      if (!board.dataset.ready) {
+        renderBoard();
+        board.dataset.ready = "1";
+      }
+      renderTokens();
+      renderPlayers();
+      renderControls();
+      renderLog();
+      renderRoom();
+      if (state.phase === "finished") showResults();
+      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) showCard();
+      else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
+    }
+    function showCard() {
+      const card = state.pendingCard;
+      if (!card) return;
+      lastCardId = card.id;
+      modal.dataset.auto = "card";
+      modalTitle.textContent = card.type === "quiz" ? `${card.space.name} 카드` : card.title;
+      if (card.type === "chance") {
+        modalBody.innerHTML = `<p class="question">${card.text}</p><div class="explain">탐험 소식은 바로 적용되었습니다.</div>`;
+        modalActions.innerHTML = `<button id="doneCard">확인</button>`;
+        document.getElementById("doneCard").onclick = closeModal;
+        openModal();
+        return;
+      }
+      modalBody.innerHTML = `<p class="question">${card.question}</p><div class="choices"></div><div class="explain" id="explain">${card.answered ? card.explain : "답을 골라 보세요."}</div>`;
+      const choices = modalBody.querySelector(".choices");
+      card.choices.forEach((text, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = text;
+        if (card.answered) {
+          btn.disabled = true;
+          if (idx === card.correct) btn.classList.add("correct");
+          if (idx === card.chosen && idx !== card.correct) btn.classList.add("wrong");
+        } else {
+          btn.onclick = async () => {
+            try { await api("answer", {choice:idx}); showCard(); }
+            catch (err) { alert(err.message); }
+          };
+        }
+        choices.appendChild(btn);
+      });
+      modalActions.innerHTML = `<button id="doneCard" ${card.answered ? "" : "disabled"}>확인</button>`;
+      document.getElementById("doneCard").onclick = closeModal;
+      openModal();
+    }
+    function showResults() {
+      if (modal.dataset.auto === "result") return;
+      modal.dataset.auto = "result";
+      modalTitle.textContent = "최종 결과";
+      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="background:${p.color}"></span><div><b>${i + 1}위 ${p.name}</b><small>도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳</small></div><b>${scoreOf(p)}점</b></div>`).join("")}</div>`;
+      modalActions.innerHTML = `<button class="good" id="closeResult">확인</button>`;
+      document.getElementById("closeResult").onclick = closeModal;
+      openModal();
+    }
+    function openModal() { modal.classList.add("open"); }
+    function closeModal() { modal.classList.remove("open"); modal.dataset.auto = ""; }
+
+    document.getElementById("joinButton").onclick = async () => {
+      try { await api("join", {name:document.getElementById("playerName").value}); }
+      catch (err) { alert(err.message); }
+    };
+    document.getElementById("leaveButton").onclick = () => {
+      localStorage.removeItem("worldBlueMarbleLanPlayerId");
+      myId = "";
+      alert("이 기기의 참가 정보만 지웠습니다. 방에서 학생을 지우려면 새 방을 눌러 다시 시작하세요.");
+    };
+    document.getElementById("startGame").onclick = async () => { try { await api("start"); } catch (err) { alert(err.message); } };
+    document.getElementById("resetGame").onclick = async () => {
+      if (confirm("현재 방을 지우고 새로 시작할까요? 모든 기기의 게임이 초기화됩니다.")) {
+        localStorage.removeItem("worldBlueMarbleLanPlayerId");
+        myId = "";
+        lastCardId = "";
+        board.dataset.ready = "";
+        closeModal();
+        await api("reset");
+      }
+    };
+    document.getElementById("endGame").onclick = async () => { try { await api("finish"); } catch (err) { alert(err.message); } };
+    document.getElementById("rollDice").onclick = async () => { try { await api("roll"); } catch (err) { alert(err.message); } };
+    document.getElementById("showCard").onclick = showCard;
+    document.getElementById("nextTurn").onclick = async () => { try { await api("next"); } catch (err) { alert(err.message); } };
+    document.getElementById("closeModal").onclick = closeModal;
+
+    document.getElementById("playerName").value = localStorage.getItem("worldBlueMarbleLanName") || "";
+    document.getElementById("playerName").addEventListener("input", e => localStorage.setItem("worldBlueMarbleLanName", e.target.value));
+    refresh();
+    setInterval(refresh, 800);
+  </script>
+</body>
+</html>

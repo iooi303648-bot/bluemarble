@@ -1,0 +1,13 @@
+{
+  "name": "world-blue-marble-grade6",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Grade 6 social studies Blue Marble style multiplayer web game.",
+  "main": "world_blue_marble_lan_server.js",
+  "scripts": {
+    "start": "node world_blue_marble_lan_server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
