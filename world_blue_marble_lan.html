@@ -39,6 +39,7 @@
     .setup { margin-bottom:14px; padding:14px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end; }
     .join-card { padding:14px; display:grid; gap:10px; }
     .join-line { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
+    .room-line { display:grid; grid-template-columns:120px 1fr; gap:8px; align-items:center; }
     input { width:100%; border:1px solid var(--line); border-radius:8px; padding:.68rem .75rem; font-weight:900; }
     .room { color:var(--muted); font-weight:800; line-height:1.45; }
     .layout { display:grid; grid-template-columns:minmax(620px,1fr) 390px; gap:16px; align-items:start; }
@@ -57,6 +58,8 @@
     .space.current { outline:3px solid rgba(22,119,199,.38); }
     .kind { font-size:.7rem; color:var(--muted); font-weight:900; }
     .name { font-size:.84rem; font-weight:900; line-height:1.18; }
+    .emoji { font-size:1rem; line-height:1; }
+    .owner { font-size:.62rem; font-weight:900; color:#18456c; background:rgba(255,255,255,.78); border-radius:999px; padding:2px 5px; align-self:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .meta { font-size:.68rem; color:var(--muted); line-height:1.2; }
     .tokens { min-height:18px; display:flex; flex-wrap:wrap; gap:3px; align-items:center; }
     .token { width:17px; height:17px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.24); }
@@ -181,7 +184,14 @@
     }
     .name {
       font-size: .9rem;
+      text-align: center;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      hyphens: none;
+      text-wrap: balance;
     }
+    .space.long .name { font-size: .76rem; line-height:1.1; }
+    .space.xlong .name { font-size: .68rem; line-height:1.08; }
     .token {
       width: 19px;
       height: 19px;
@@ -251,12 +261,14 @@
     }
     @media (max-width:760px) {
       .app { width:min(100vw - 16px,720px); padding-top:10px; }
-      header,.setup,.side-panel,.join-line { grid-template-columns:1fr; }
+      header,.setup,.side-panel,.join-line,.room-line { grid-template-columns:1fr; }
       .board { grid-template-columns:repeat(9,minmax(34px,1fr)); grid-template-rows:repeat(9,minmax(45px,1fr)); gap:4px; min-height:540px; }
       .space { min-height:45px; padding:4px; }
       .space.center { padding:10px; }
       .kind,.meta { display:none; }
-      .name { font-size:.66rem; }
+      .name { font-size:.62rem; line-height:1.12; }
+      .space.long .name { font-size:.56rem; }
+      .space.xlong .name { font-size:.5rem; }
       .center-grid { grid-template-columns:1fr; }
       .mini { min-height:auto; }
       .timer { min-width:0; }
@@ -276,6 +288,10 @@
     <section class="setup" id="setup">
       <div class="join-card">
         <div class="room" id="roomInfo">이 주소를 같은 와이파이에 연결된 기기에서 열고 참가하세요.</div>
+        <div class="room-line">
+          <b>방 코드</b>
+          <input id="roomCode" maxlength="12" placeholder="예: 1, 2, 3, 4, 5, 6">
+        </div>
         <div class="join-line">
           <input id="playerName" maxlength="8" placeholder="이름">
           <button class="good" id="joinButton">참가</button>
@@ -306,6 +322,8 @@
           <div class="actions">
             <button id="rollDice">주사위</button>
             <button class="warn" id="showCard">카드 보기</button>
+            <button class="good" id="buySpace">사기</button>
+            <button class="light" id="sellSpace">팔기</button>
             <button class="wide dark" id="nextTurn">다음 차례</button>
           </div>
         </div>
@@ -336,6 +354,7 @@
     let state = null;
     let myId = localStorage.getItem("worldBlueMarbleLanPlayerId") || "";
     let lastCardId = "";
+    let roomCode = new URLSearchParams(location.search).get("room") || localStorage.getItem("worldBlueMarbleRoomCode") || "1";
 
     const board = document.getElementById("board");
     const playersEl = document.getElementById("players");
@@ -355,10 +374,29 @@
       return {gridColumn:1, gridRow:33 - i};
     }
     function kindLabel(type) {
-      return {start:"출발", quiz:"개념", country:"나라", ocean:"대양", continent:"대륙", chance:"소식"}[type] || "";
+      return {start:"출발", quiz:"개념", country:"나라", ocean:"대양", continent:"대륙", chance:"황금열쇠"}[type] || "";
+    }
+    function emojiFor(type) {
+      return {start:"🚀", quiz:"🧭", country:"🏙️", ocean:"🌊", continent:"🗺️", chance:"🔑"}[type] || "🌍";
+    }
+    function roomValue() {
+      const value = document.getElementById("roomCode")?.value || roomCode || "1";
+      roomCode = value.trim().replace(/[^\w가-힣-]/g, "").slice(0, 12) || "1";
+      localStorage.setItem("worldBlueMarbleRoomCode", roomCode);
+      return roomCode;
     }
     function scoreOf(p) {
       return p.score + p.stamps.length * 3 + new Set(p.continents).size * 2;
+    }
+    function isBuyable(space) {
+      return space && ["country", "continent", "ocean"].includes(space.type);
+    }
+    function propertyCost(space) {
+      if (!space) return 0;
+      if (space.type === "country") return 4;
+      if (space.type === "continent") return 5;
+      if (space.type === "ocean") return 6;
+      return 0;
     }
     function currentPlayer() {
       return state && state.players[state.current];
@@ -376,7 +414,7 @@
       const res = await fetch("/api/action", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action, playerId:myId, ...data})
+        body:JSON.stringify({action, playerId:myId, room:roomValue(), ...data})
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || "요청 실패");
@@ -389,7 +427,7 @@
     }
     async function refresh() {
       try {
-        const res = await fetch("/api/state", {cache:"no-store"});
+        const res = await fetch(`/api/state?room=${encodeURIComponent(roomValue())}`, {cache:"no-store"});
         state = await res.json();
         render();
       } catch (err) {
@@ -403,10 +441,13 @@
         const pos = boardPos(i);
         const cell = document.createElement("div");
         cell.className = `space ${space.type}`;
+        if (space.name.length >= 6) cell.classList.add("long");
+        if (space.name.length >= 8) cell.classList.add("xlong");
         cell.dataset.index = i;
         cell.style.gridColumn = pos.gridColumn;
         cell.style.gridRow = pos.gridRow;
-        cell.innerHTML = `<div><div class="kind">${kindLabel(space.type)}</div><div class="name">${space.name}</div><div class="meta">${space.meta || ""}</div></div><div class="tokens"></div>`;
+        const owner = state.players.find(p => state.properties && state.properties[i] === p.id);
+        cell.innerHTML = `<div><div class="kind"><span class="emoji">${emojiFor(space.type)}</span> ${kindLabel(space.type)}</div><div class="name">${space.name}</div><div class="meta">${space.meta || ""}</div></div>${owner ? `<div class="owner">${owner.name} 소유</div>` : ""}<div class="tokens"></div>`;
         board.appendChild(cell);
       });
       const center = document.createElement("div");
@@ -414,9 +455,9 @@
       center.innerHTML = `
         <h2 class="center-title">대륙과 대양을 지나 나라 도장을 모으세요</h2>
         <div class="center-grid">
-          <div class="mini"><b>내 기기</b><span>이름을 넣고 참가하면 자기 차례에만 주사위와 카드 버튼이 열립니다.</span></div>
-          <div class="mini"><b>시간</b><span>20분이 지나거나 마치기를 누르면 점수로 승부합니다.</span></div>
-          <div class="mini"><b>점수</b><span>정답 2점, 나라 도장 3점, 새 대륙 2점입니다.</span></div>
+          <div class="mini"><b>모둠 방</b><span>방 코드를 1~6으로 나누면 여러 모둠이 동시에 플레이합니다.</span></div>
+          <div class="mini"><b>사고 팔기</b><span>나라, 대륙, 대양을 사면 다른 친구가 도착할 때 통행료를 받습니다.</span></div>
+          <div class="mini"><b>황금열쇠</b><span>이동, 보너스, 감점 같은 특별 카드가 바로 적용됩니다.</span></div>
         </div>`;
       board.appendChild(center);
     }
@@ -450,10 +491,15 @@
       const cp = currentPlayer();
       const mine = isMyTurn();
       const pending = state && state.pendingCard;
+      const currentSpace = cp && state.boardSpaces[cp.pos];
+      const ownerId = cp && state.properties ? state.properties[cp.pos] : null;
+      const canManageLand = mine && state.rolled && (!pending || pending.answered) && isBuyable(currentSpace);
       activePlayerEl.innerHTML = cp ? `<span class="token" style="background:${cp.color}"></span><span>${cp.name} 차례</span>` : "참가 대기 중";
       diceEl.textContent = state ? state.dice : "1";
       document.getElementById("rollDice").disabled = !(mine && !state.rolled && !pending);
       document.getElementById("showCard").disabled = !(pending && pending.playerId === myId);
+      document.getElementById("buySpace").disabled = !(canManageLand && !ownerId && cp.score >= propertyCost(currentSpace));
+      document.getElementById("sellSpace").disabled = !(canManageLand && ownerId === myId);
       document.getElementById("nextTurn").disabled = !(mine && state.rolled && (!pending || pending.answered));
       document.getElementById("startGame").disabled = !(state.phase === "lobby" && state.players.length >= 2);
       document.getElementById("resetGame").disabled = false;
@@ -473,14 +519,12 @@
     function renderRoom() {
       const me = state.players.find(p => p.id === myId);
       const status = state.phase === "lobby" ? "참가 대기" : state.phase === "playing" ? "게임 중" : "게임 종료";
-      document.getElementById("roomInfo").textContent = `${location.origin} · ${status} · 참가 ${state.players.length}/6명${me ? ` · 내 이름: ${me.name}` : ""}`;
+      const roomUrl = `${location.origin}${location.pathname}?room=${encodeURIComponent(state.roomCode || roomCode)}`;
+      document.getElementById("roomInfo").textContent = `방 ${state.roomCode || roomCode} · ${status} · 참가 ${state.players.length}/6명 · ${roomUrl}${me ? ` · 내 이름: ${me.name}` : ""}`;
     }
     function render() {
       if (!state) return;
-      if (!board.dataset.ready) {
-        renderBoard();
-        board.dataset.ready = "1";
-      }
+      renderBoard();
       renderTokens();
       renderPlayers();
       renderControls();
@@ -560,10 +604,23 @@
     document.getElementById("endGame").onclick = async () => { try { await api("finish"); } catch (err) { alert(err.message); } };
     document.getElementById("rollDice").onclick = async () => { try { await api("roll"); } catch (err) { alert(err.message); } };
     document.getElementById("showCard").onclick = showCard;
+    document.getElementById("buySpace").onclick = async () => { try { await api("buy"); } catch (err) { alert(err.message); } };
+    document.getElementById("sellSpace").onclick = async () => { try { await api("sell"); } catch (err) { alert(err.message); } };
     document.getElementById("nextTurn").onclick = async () => { try { await api("next"); } catch (err) { alert(err.message); } };
     document.getElementById("closeModal").onclick = closeModal;
 
     document.getElementById("playerName").value = localStorage.getItem("worldBlueMarbleLanName") || "";
+    document.getElementById("roomCode").value = roomCode;
+    document.getElementById("roomCode").addEventListener("change", () => {
+      roomValue();
+      myId = "";
+      localStorage.removeItem("worldBlueMarbleLanPlayerId");
+      lastCardId = "";
+      const url = new URL(location.href);
+      url.searchParams.set("room", roomCode);
+      history.replaceState(null, "", url);
+      refresh();
+    });
     document.getElementById("playerName").addEventListener("input", e => localStorage.setItem("worldBlueMarbleLanName", e.target.value));
     refresh();
     setInterval(refresh, 800);

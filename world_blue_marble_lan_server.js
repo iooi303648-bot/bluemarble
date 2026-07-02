@@ -13,7 +13,7 @@ const boardSpaces = [
   {type:"country", name:"대한민국", continent:"아시아", meta:"반도에 있는 우리나라"},
   {type:"ocean", name:"태평양", meta:"가장 넓은 대양"},
   {type:"country", name:"일본", continent:"아시아", meta:"섬나라"},
-  {type:"chance", name:"공간 자료", meta:"지구본, 지도, 영상"},
+  {type:"chance", name:"황금열쇠", meta:"지구본, 지도, 영상"},
   {type:"country", name:"중국", continent:"아시아", meta:"넓은 영토"},
   {type:"quiz", name:"경도", meta:"본초 자오선"},
   {type:"continent", name:"아시아", meta:"가장 큰 대륙"},
@@ -23,7 +23,7 @@ const boardSpaces = [
   {type:"quiz", name:"대륙", meta:"큰 땅덩어리"},
   {type:"country", name:"케냐", continent:"아프리카", meta:"동아프리카"},
   {type:"continent", name:"아프리카", meta:"적도가 지나감"},
-  {type:"chance", name:"탐험 소식", meta:"이동 카드"},
+  {type:"chance", name:"황금열쇠", meta:"이동 카드"},
   {type:"country", name:"프랑스", continent:"유럽", meta:"유럽 서쪽"},
   {type:"quiz", name:"디지털 지도", meta:"확대와 축소"},
   {type:"country", name:"영국", continent:"유럽", meta:"섬나라"},
@@ -32,7 +32,7 @@ const boardSpaces = [
   {type:"continent", name:"북아메리카", meta:"북반구에 넓게 위치"},
   {type:"quiz", name:"영토 특징", meta:"모양과 위치"},
   {type:"country", name:"캐나다", continent:"북아메리카", meta:"북쪽의 넓은 나라"},
-  {type:"chance", name:"세계 여행", meta:"도장 기회"},
+  {type:"chance", name:"황금열쇠", meta:"도장 기회"},
   {type:"country", name:"브라질", continent:"남아메리카", meta:"아마존 지역"},
   {type:"continent", name:"남아메리카", meta:"남북으로 길다"},
   {type:"ocean", name:"남극해", meta:"남극 대륙 주변"},
@@ -76,20 +76,35 @@ const chanceCards = [
   {title:"출발점 비행", text:"공항으로 이동합니다. 출발점으로 이동하고 1점을 얻습니다.", goStart:true}
 ];
 
-const state = freshState();
-let timer = null;
+let state = freshState("1");
+const rooms = new Map([["1", state]]);
+const timers = new Map();
 
-function freshState() {
+function normalizeRoom(value) {
+  const room = String(value || "1").trim().replace(/[^\w가-힣-]/g, "").slice(0, 12);
+  return room || "1";
+}
+
+function getRoom(value) {
+  const code = normalizeRoom(value);
+  if (!rooms.has(code) && rooms.size >= 6) throw new Error("방은 최대 6개까지 만들 수 있습니다.");
+  if (!rooms.has(code)) rooms.set(code, freshState(code));
+  return rooms.get(code);
+}
+
+function freshState(roomCode) {
   return {
+    roomCode,
     phase: "lobby",
     players: [],
     current: 0,
     secondsLeft: 20 * 60,
     dice: 1,
     rolled: false,
+    properties: {},
     pendingCard: null,
     lastResult: null,
-    logs: ["참가할 학생은 같은 주소로 접속해 이름을 넣으세요."],
+    logs: [`${roomCode}번 방입니다. 모둠원은 같은 방 코드로 참가하세요.`],
     finishedReason: ""
   };
 }
@@ -99,12 +114,35 @@ function publicState() {
     ...state,
     boardSpaces,
     ranking: [...state.players].sort((a, b) => scoreOf(b) - scoreOf(a)),
+    rooms: Array.from(rooms.values()).map(room => ({
+      roomCode: room.roomCode,
+      phase: room.phase,
+      players: room.players.length
+    })),
     serverTime: Date.now()
   };
 }
 
 function scoreOf(p) {
   return p.score + p.stamps.length * 3 + new Set(p.continents).size * 2;
+}
+
+function isBuyable(space) {
+  return ["country", "continent", "ocean"].includes(space.type);
+}
+
+function propertyCost(space) {
+  if (space.type === "country") return 4;
+  if (space.type === "continent") return 5;
+  if (space.type === "ocean") return 6;
+  return 0;
+}
+
+function propertyRent(space) {
+  if (space.type === "country") return 2;
+  if (space.type === "continent") return 3;
+  if (space.type === "ocean") return 4;
+  return 0;
 }
 
 function log(text) {
@@ -125,19 +163,23 @@ function currentPlayer() {
 }
 
 function startTimer() {
-  clearInterval(timer);
-  timer = setInterval(() => {
+  clearInterval(timers.get(state.roomCode));
+  const room = state;
+  const timer = setInterval(() => {
+    state = room;
     if (state.phase !== "playing") return;
     state.secondsLeft -= 1;
     if (state.secondsLeft <= 0) finish("20분이 지났습니다.");
   }, 1000);
+  timers.set(room.roomCode, timer);
 }
 
 function finish(reason) {
   state.phase = "finished";
   state.finishedReason = reason;
   state.pendingCard = null;
-  clearInterval(timer);
+  clearInterval(timers.get(state.roomCode));
+  timers.delete(state.roomCode);
   log(reason);
 }
 
@@ -210,15 +252,16 @@ function handleAction(body) {
     if (state.phase !== "lobby") throw new Error("게임이 이미 시작되어 새로 참가할 수 없습니다.");
     if (state.players.length >= 6) throw new Error("최대 6명까지 참가할 수 있습니다.");
     const id = randomId();
-    p = {id, name: cleanName(name || `${state.players.length + 1}번`), color: colors[state.players.length], pos: 0, score: 5, stamps: [], continents: [], slow: false};
+    p = {id, name: cleanName(name || `${state.players.length + 1}번`), color: colors[state.players.length], pos: 0, score: 20, stamps: [], continents: [], slow: false};
     state.players.push(p);
     log(`${p.name}이 참가했습니다.`);
     return {playerId: id};
   }
 
   if (action === "reset") {
-    Object.assign(state, freshState());
-    clearInterval(timer);
+    clearInterval(timers.get(state.roomCode));
+    timers.delete(state.roomCode);
+    Object.assign(state, freshState(state.roomCode));
     return {};
   }
 
@@ -253,10 +296,41 @@ function handleAction(body) {
     state.dice = value;
     state.rolled = true;
     movePlayer(p, value);
-    const space = boardSpaces[p.pos];
+    const space = {...boardSpaces[p.pos], index: p.pos};
     log(`${p.name}이 ${value}칸 이동해 ${space.name}에 도착했습니다.`);
+    const ownerId = state.properties[p.pos];
+    if (isBuyable(space) && ownerId && ownerId !== p.id) {
+      const owner = playerById(ownerId);
+      const rent = propertyRent(space);
+      p.score = Math.max(0, p.score - rent);
+      if (owner) owner.score += rent;
+      log(`${p.name}이 ${space.name} 통행료 ${rent}점을 ${owner ? owner.name : "소유자"}에게 냈습니다.`);
+    }
     if (["quiz", "country", "continent", "ocean"].includes(space.type)) createQuiz(space, p.id);
     if (space.type === "chance") applyChance(p.id);
+    return {};
+  }
+
+  if (action === "buy") {
+    if (!state.rolled || state.pendingCard && !state.pendingCard.answered) throw new Error("카드를 먼저 해결해야 살 수 있습니다.");
+    const space = {...boardSpaces[p.pos], index: p.pos};
+    if (!isBuyable(space)) throw new Error("이 칸은 살 수 없습니다.");
+    if (state.properties[p.pos]) throw new Error("이미 누군가 산 칸입니다.");
+    const cost = propertyCost(space);
+    if (p.score < cost) throw new Error(`${cost}점이 필요합니다.`);
+    p.score -= cost;
+    state.properties[p.pos] = p.id;
+    log(`${p.name}이 ${space.name}을 ${cost}점에 샀습니다.`);
+    return {};
+  }
+
+  if (action === "sell") {
+    const space = {...boardSpaces[p.pos], index: p.pos};
+    if (!isBuyable(space) || state.properties[p.pos] !== p.id) throw new Error("현재 칸은 팔 수 없습니다.");
+    const refund = Math.ceil(propertyCost(space) * 0.7);
+    delete state.properties[p.pos];
+    p.score += refund;
+    log(`${p.name}이 ${space.name}을 팔아 ${refund}점을 받았습니다.`);
     return {};
   }
 
@@ -326,9 +400,14 @@ function mime(file) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (req.method === "GET" && url.pathname === "/api/state") return sendJson(res, 200, publicState());
+    if (req.method === "GET" && url.pathname === "/api/state") {
+      state = getRoom(url.searchParams.get("room"));
+      return sendJson(res, 200, publicState());
+    }
     if (req.method === "POST" && url.pathname === "/api/action") {
-      const result = handleAction(await readBody(req));
+      const body = await readBody(req);
+      state = getRoom(body.room);
+      const result = handleAction(body);
       return sendJson(res, 200, {ok:true, ...result, state: publicState()});
     }
     let file = url.pathname === "/" ? "world_blue_marble_lan.html" : decodeURIComponent(url.pathname.slice(1));
