@@ -102,6 +102,7 @@ function freshState(roomCode) {
     dice: 1,
     rolled: false,
     properties: {},
+    buyRights: {},
     pendingCard: null,
     lastResult: null,
     logs: [`${roomCode}번 방입니다. 모둠원은 같은 방 코드로 참가하세요.`],
@@ -234,6 +235,7 @@ function applyChance(playerId) {
 function endTurn(playerId) {
   const p = currentPlayer();
   if (!p || p.id !== playerId || state.pendingCard && !state.pendingCard.answered) return false;
+  delete state.buyRights[p.id];
   state.current = (state.current + 1) % state.players.length;
   state.rolled = false;
   state.pendingCard = null;
@@ -288,6 +290,7 @@ function handleAction(body) {
 
   if (action === "roll") {
     if (state.rolled || state.pendingCard) throw new Error("이미 주사위를 굴렸습니다.");
+    delete state.buyRights[p.id];
     let value = Math.floor(Math.random() * 6) + 1;
     if (p.slow) {
       value = Math.max(1, value - 1);
@@ -315,11 +318,13 @@ function handleAction(body) {
     if (!state.rolled || state.pendingCard && !state.pendingCard.answered) throw new Error("카드를 먼저 해결해야 살 수 있습니다.");
     const space = {...boardSpaces[p.pos], index: p.pos};
     if (!isBuyable(space)) throw new Error("이 칸은 살 수 없습니다.");
+    if (state.buyRights[p.id] !== p.pos) throw new Error("문제를 맞힌 칸만 살 수 있습니다.");
     if (state.properties[p.pos]) throw new Error("이미 누군가 산 칸입니다.");
     const cost = propertyCost(space);
     if (p.score < cost) throw new Error(`${cost}점이 필요합니다.`);
     p.score -= cost;
     state.properties[p.pos] = p.id;
+    delete state.buyRights[p.id];
     log(`${p.name}이 ${space.name}을 ${cost}점에 샀습니다.`);
     return {};
   }
@@ -342,6 +347,9 @@ function handleAction(body) {
     const space = card.space;
     if (card.chosen === card.correct) {
       p.score += 2;
+      if (isBuyable(space) && !state.properties[space.index]) {
+        state.buyRights[p.id] = space.index;
+      }
       if (space.type === "country" && !p.stamps.includes(space.name)) {
         p.stamps.push(space.name);
         p.continents.push(space.continent);
@@ -352,6 +360,7 @@ function handleAction(body) {
       state.lastResult = `${p.name} 정답! 2점을 얻었습니다.`;
       log(state.lastResult);
     } else {
+      delete state.buyRights[p.id];
       p.score = Math.max(0, p.score - 1);
       state.lastResult = `${p.name} 아쉽습니다. 1점을 사용했습니다.`;
       log(state.lastResult);
