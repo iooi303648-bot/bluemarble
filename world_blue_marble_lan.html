@@ -104,7 +104,15 @@
     .space.ocean::before { background:var(--teal); }
     .space.continent::before { background:var(--orange); }
     .space.chance::before { background:var(--rose); }
-    .space.current { outline:4px solid var(--gold-light); box-shadow:0 0 0 5px rgba(240,207,124,.35), 0 9px 0 rgba(40,25,8,.35), 0 16px 24px rgba(0,0,0,.3); }
+    .space.current { outline:4px solid var(--gold-light); z-index:2; animation:currentPulse 1.3s ease-in-out infinite; }
+    @keyframes currentPulse {
+      0%,100% { box-shadow:0 0 0 4px rgba(240,207,124,.5), 0 9px 0 rgba(40,25,8,.35), 0 16px 24px rgba(0,0,0,.3); }
+      50% { box-shadow:0 0 0 10px rgba(240,207,124,.15), 0 9px 0 rgba(40,25,8,.35), 0 16px 24px rgba(0,0,0,.3); }
+    }
+    .space.my-here { outline:3px solid var(--blue); }
+    .space.my-here.current { outline:4px solid var(--gold-light); }
+    .token.mover { animation:tokenBounce 1s ease-in-out infinite; }
+    @keyframes tokenBounce { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
     .kind { font-size:.68rem; color:var(--muted); font-weight:900; margin-top:5px; display:flex; align-items:center; gap:3px; justify-content:center; }
     .name { font-size:.84rem; font-weight:900; line-height:1.18; text-align:center; word-break:keep-all; overflow-wrap:normal; hyphens:none; text-wrap:balance; }
     .space.long .name { font-size:.74rem; line-height:1.1; }
@@ -212,7 +220,42 @@
     }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    .mission { margin:10px 0; padding:11px; border-radius:8px; background:linear-gradient(160deg,var(--gold-light),#fdf6e6); border:2px solid var(--gold); color:var(--navy); font-weight:900; text-align:center; box-shadow:0 5px 0 rgba(90,56,31,.14); }
+    .mission { position:relative; margin:10px 0; padding:11px; border-radius:8px; background:linear-gradient(160deg,var(--gold-light),#fdf6e6); border:2px solid var(--gold); color:var(--navy); font-weight:900; text-align:center; box-shadow:0 5px 0 rgba(90,56,31,.14); }
+
+    @keyframes tokenLand { 0%{ transform:scale(.3) translateY(-14px); opacity:0; } 60%{ transform:scale(1.2) translateY(2px); opacity:1; } 100%{ transform:scale(1) translateY(0); opacity:1; } }
+    .token.landing { animation:tokenLand .45s cubic-bezier(.34,1.56,.64,1); }
+
+    @keyframes choicePop { 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
+    @keyframes choiceShake { 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-6px); } 40%{ transform:translateX(6px); } 60%{ transform:translateX(-4px); } 80%{ transform:translateX(4px); } }
+    .choice.correct { animation:choicePop .4s ease; }
+    .choice.wrong { animation:choiceShake .4s ease; }
+
+    @keyframes soldPop {
+      0% { opacity:0; transform:rotate(-12deg) scale(2.2); }
+      20% { opacity:1; transform:rotate(-12deg) scale(1); }
+      70% { opacity:1; transform:rotate(-12deg) scale(1); }
+      100% { opacity:0; transform:rotate(-12deg) scale(1); }
+    }
+    .sold-stamp {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      font-size:1.05rem; font-weight:900; color:#fff; background:rgba(193,57,79,.85);
+      border-radius:8px; z-index:5; pointer-events:none; animation:soldPop .9s ease forwards;
+    }
+
+    @keyframes floatUp { 0%{ opacity:0; transform:translate(-50%,0); } 15%{ opacity:1; } 100%{ opacity:0; transform:translate(-50%,-34px); } }
+    .score-float { position:absolute; left:50%; top:-4px; transform:translateX(-50%); font-weight:900; font-size:1.1rem; pointer-events:none; animation:floatUp 1.2s ease forwards; }
+    .score-float.up { color:var(--green); }
+    .score-float.down { color:var(--rose); }
+
+    @keyframes turnPulse {
+      0% { box-shadow:0 8px 0 rgba(90,56,31,.18), 0 0 0 0 rgba(211,164,58,.6); }
+      70% { box-shadow:0 8px 0 rgba(90,56,31,.18), 0 0 0 18px rgba(211,164,58,0); }
+      100% { box-shadow:0 8px 0 rgba(90,56,31,.18), 0 0 0 0 rgba(211,164,58,0); }
+    }
+    .turn-box.turn-pulse { animation:turnPulse 1s ease-out 2; }
+
+    .confetti-piece { position:fixed; top:-10px; width:8px; height:14px; opacity:.9; z-index:50; animation:confettiFall linear forwards; }
+    @keyframes confettiFall { to { transform:translateY(110vh) rotate(540deg); opacity:0; } }
     .game-status { margin-top:16px; padding:14px 18px; border:3px solid var(--gold); border-radius:10px; background:linear-gradient(160deg,var(--parchment-1),var(--parchment-2)); box-shadow:0 12px 0 rgba(50,32,10,.2), 0 20px 40px rgba(0,0,0,.25); font-weight:900; text-align:center; color:var(--navy); }
 
     body[data-phase="playing"] .setup { display:none !important; }
@@ -393,6 +436,9 @@
     let lastCardId = "";
     let lastTollId = "";
     let roomCode = new URLSearchParams(location.search).get("room") || localStorage.getItem("worldBlueMarbleRoomCode") || "1";
+    let prevPlayers = {};
+    let prevProperties = {};
+    let prevCurrentId = null;
 
     const board = document.getElementById("board");
     const playersEl = document.getElementById("players");
@@ -595,19 +641,21 @@
         slot.innerHTML = owner ? `<div class="owner" style="--owner-color:${owner.color}">${owner.name}</div>` : "";
       });
     }
-    function renderTokens() {
-      document.querySelectorAll(".space").forEach(s => s.classList.remove("current"));
+    function renderTokens(movedPlayers) {
+      document.querySelectorAll(".space").forEach(s => s.classList.remove("current", "my-here"));
       document.querySelectorAll(".tokens").forEach(t => t.innerHTML = "");
       if (!state) return;
       state.players.forEach((p, idx) => {
         const cell = document.querySelector(`.space[data-index="${p.pos}"]`);
         if (!cell) return;
         const token = document.createElement("span");
-        token.className = "token";
+        const isMover = idx === state.current && state.phase === "playing";
+        token.className = "token" + (movedPlayers && movedPlayers.has(p.id) ? " landing" : "") + (isMover ? " mover" : "");
         token.style.setProperty("--piece", p.color);
         token.textContent = pieceFor(p.id);
         token.title = p.name;
         cell.querySelector(".tokens").appendChild(token);
+        if (p.id === myId) cell.classList.add("my-here");
         if (idx === state.current && state.phase === "playing") cell.classList.add("current");
       });
     }
@@ -678,7 +726,7 @@
       else mission = "다음 차례로 넘기세요.";
       missionEl.textContent = mission;
       statusEl.textContent = state.phase === "playing"
-        ? `${state.era} · 현재 위치: ${cp ? state.boardSpaces[cp.pos].name : "-"} · ${cp ? `${cp.name} ${cp.score}M` : ""}`
+        ? `${state.era} · 현재 위치: ${cp ? state.boardSpaces[cp.pos].name : "-"} · ${cp ? `${cp.name} ${cp.score}M` : ""} · 🟡번쩍이는 칸=차례인 친구, 🔵테두리=내 위치`
         : `방 ${state.roomCode || roomCode} · 2~6명이 참가합니다.`;
     }
     function renderBank(cp, mine) {
@@ -722,10 +770,85 @@
       const roomUrl = `${location.origin}${location.pathname}?room=${encodeURIComponent(state.roomCode || roomCode)}`;
       document.getElementById("roomInfo").textContent = `방 ${state.roomCode || roomCode} · ${status} · 참가 ${state.players.length}/6명 · ${roomUrl}${me ? ` · 내 이름: ${me.name}` : ""}`;
     }
+    function detectMovedPlayers() {
+      const moved = new Set();
+      state.players.forEach(p => {
+        const prev = prevPlayers[p.id];
+        if (prev && prev.pos !== p.pos) moved.add(p.id);
+      });
+      return moved;
+    }
+    function detectNewlySold() {
+      const sold = [];
+      Object.keys(state.properties || {}).forEach(idx => {
+        if (!(idx in prevProperties)) sold.push(Number(idx));
+      });
+      return sold;
+    }
+    function detectMyScoreDelta() {
+      const me = state.players.find(p => p.id === myId);
+      const prev = prevPlayers[myId];
+      if (me && prev && typeof prev.score === "number" && me.score !== prev.score) return me.score - prev.score;
+      return 0;
+    }
+    function detectTurnStart() {
+      const cp = currentPlayer();
+      return !!(cp && cp.id === myId && prevCurrentId !== myId && state.phase === "playing" && prevCurrentId !== null);
+    }
+    function updateSnapshot() {
+      const nextPlayers = {};
+      state.players.forEach(p => { nextPlayers[p.id] = {pos: p.pos, score: p.score}; });
+      prevPlayers = nextPlayers;
+      prevProperties = {...(state.properties || {})};
+      const cp = currentPlayer();
+      prevCurrentId = cp ? cp.id : null;
+    }
+    function flashSold(idx) {
+      const cell = document.querySelector(`.space[data-index="${idx}"]`);
+      if (!cell) return;
+      const stamp = document.createElement("div");
+      stamp.className = "sold-stamp";
+      stamp.textContent = "SOLD!";
+      cell.appendChild(stamp);
+      setTimeout(() => stamp.remove(), 900);
+    }
+    function floatScore(delta) {
+      const el = document.createElement("div");
+      el.className = "score-float " + (delta > 0 ? "up" : "down");
+      el.textContent = (delta > 0 ? "+" : "") + delta + "M";
+      const host = document.getElementById("missionText");
+      host.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }
+    function pulseTurnBox() {
+      const box = document.querySelector(".turn-box");
+      if (!box) return;
+      box.classList.remove("turn-pulse");
+      void box.offsetWidth;
+      box.classList.add("turn-pulse");
+      showToast("🎲 내 차례예요!");
+    }
+    function launchConfetti() {
+      const colors = ["#d3a43a", "#2f6fa8", "#2f8f5b", "#c1394f", "#1f8fa0", "#f0cf7c"];
+      for (let i = 0; i < 28; i++) {
+        const el = document.createElement("div");
+        el.className = "confetti-piece";
+        el.style.left = Math.random() * 100 + "vw";
+        el.style.background = colors[i % colors.length];
+        el.style.animationDuration = (2 + Math.random() * 1.5) + "s";
+        el.style.transform = `rotate(${Math.random() * 360}deg)`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+      }
+    }
     function render() {
       if (!state) return;
+      const movedPlayers = detectMovedPlayers();
+      const soldTiles = detectNewlySold();
+      const myScoreDelta = detectMyScoreDelta();
+      const turnJustStarted = detectTurnStart();
       renderBoard();
-      renderTokens();
+      renderTokens(movedPlayers);
       renderPlayers();
       renderControls();
       renderTravelCard();
@@ -733,6 +856,10 @@
       renderLog();
       renderRoom();
       checkTollEvent();
+      soldTiles.forEach(flashSold);
+      if (myScoreDelta) floatScore(myScoreDelta);
+      if (turnJustStarted) pulseTurnBox();
+      updateSnapshot();
       if (state.phase === "finished") showResults();
       else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) showCard();
       else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
