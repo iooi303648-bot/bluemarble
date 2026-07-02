@@ -13,6 +13,7 @@
     * { box-sizing:border-box; }
     body {
       margin:0; min-height:100vh; color:var(--ink);
+      overflow-x:hidden;
       font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
       background:
         radial-gradient(circle at 15% 10%, rgba(22,119,199,.12), transparent 28rem),
@@ -345,12 +346,15 @@
     }
     body[data-phase="playing"] h1 { font-size: clamp(1.45rem, 2.4vw, 2.4rem); }
     body[data-phase="playing"] .subtitle { display: none; }
-    body[data-phase="playing"] .layout { grid-template-columns: minmax(760px, 1fr) 310px; }
+    body[data-phase="playing"] .layout { grid-template-columns: minmax(820px, 1fr) 340px; }
     body[data-phase="playing"] .board-panel { min-height: calc(100vh - 142px); }
     body[data-phase="playing"] .side-panel {
       position: sticky;
       top: 12px;
       padding: 14px;
+      max-height:calc(100vh - 138px);
+      overflow:auto;
+      gap:10px;
       background:
         linear-gradient(90deg, rgba(25,79,118,.08) 1px, transparent 1px),
         linear-gradient(#fffdf4,#eef9ff);
@@ -366,10 +370,10 @@
       width: 100%;
     }
     body[data-phase="playing"] .dice {
-      width: 118px;
-      height: 118px;
-      font-size: 4.2rem;
-      margin: 14px auto 18px;
+      width: 94px;
+      height: 94px;
+      font-size: 3.4rem;
+      margin: 10px auto 14px;
     }
     body[data-phase="playing"] .turn-box .actions { grid-template-columns: 1fr; }
     body[data-phase="playing"] .turn-box .actions button {
@@ -377,10 +381,7 @@
       font-size: 1.05rem;
     }
     body[data-phase="playing"] .turn-box .actions button:disabled { display: none; }
-    body[data-phase="playing"] .log {
-      max-height: 94px;
-      opacity: .86;
-    }
+    body[data-phase="playing"] .log { max-height: 94px; opacity: .86; }
     body[data-phase="playing"] .scoreboard h2,
     body[data-phase="playing"] .log-panel h2 {
       font-size: .8rem !important;
@@ -390,10 +391,210 @@
       max-height: 210px;
       overflow: auto;
     }
-    body[data-phase="playing"] .log-panel {
-      opacity: .66;
-    }
+    body[data-phase="playing"] .log-panel { display:none; }
     body[data-phase="playing"] .players { gap: 6px; }
+    .room::before {
+      content:"PASSPORT";
+      display:inline-grid;
+      place-items:center;
+      width:88px;
+      height:28px;
+      margin-right:10px;
+      border-radius:4px;
+      background:#17304d;
+      color:#fff7d6;
+      font-size:.72rem;
+      letter-spacing:1px;
+      box-shadow:0 4px 0 rgba(0,0,0,.16);
+    }
+    body:not([data-phase="playing"]) .setup {
+      grid-template-columns:1fr;
+      max-width:960px;
+      margin:0 auto 18px;
+      padding:18px;
+      background:
+        linear-gradient(90deg, rgba(25,79,118,.08) 1px, transparent 1px),
+        linear-gradient(#fffdf4,#eef9ff);
+      background-size:14px 14px, auto;
+    }
+    body:not([data-phase="playing"]) .setup > .actions {
+      grid-template-columns:1fr 1fr;
+      max-width:520px;
+      width:100%;
+      margin:0 auto;
+    }
+    body:not([data-phase="playing"]) .join-card {
+      position:relative;
+      padding:18px;
+      border:3px solid #17304d;
+      background:linear-gradient(135deg,#fffdf4,#e4f7ff);
+    }
+    body:not([data-phase="playing"]) .join-card::after {
+      content:"🛫";
+      position:absolute;
+      right:18px;
+      top:16px;
+      font-size:2rem;
+      transform:rotate(-8deg);
+    }
+    body:not([data-phase="playing"]) .layout {
+      max-width:1160px;
+      margin:0 auto;
+      grid-template-columns:1fr;
+    }
+    body:not([data-phase="playing"]) .side-panel { display:none; }
+    body:not([data-phase="playing"]) .board-panel {
+      min-height:560px;
+      display:grid;
+      place-items:center;
+    }
+    body:not([data-phase="playing"]) .board {
+      width:min(100%,980px);
+      min-height:540px;
+    }
+    body[data-phase="playing"] .app {
+      width:min(1560px,calc(100vw - 24px));
+      padding-top:12px;
+    }
+    body[data-phase="playing"] .board {
+      grid-template-columns:repeat(9,minmax(64px,1fr));
+      grid-template-rows:repeat(9,minmax(0,1fr));
+      gap:9px;
+      height:min(820px, calc(100vh - 164px));
+      min-height:552px;
+    }
+    body[data-phase="playing"] .space {
+      min-height:0;
+      padding:7px;
+      justify-content:space-between;
+    }
+    body[data-phase="playing"] .kind {
+      margin-top:3px;
+      font-size:0;
+      text-align:center;
+      height:1.25rem;
+    }
+    body[data-phase="playing"] .emoji {
+      display:block;
+      font-size:1.18rem;
+      margin-bottom:0;
+    }
+    body[data-phase="playing"] .name {
+      font-size:.8rem;
+      line-height:1.12;
+      min-height:1.75em;
+      display:grid;
+      place-items:center;
+    }
+    body[data-phase="playing"] .space.long .name { font-size:.7rem; }
+    body[data-phase="playing"] .space.xlong .name { font-size:.62rem; }
+    body[data-phase="playing"] .meta { display:none; }
+    body[data-phase="playing"] .owner {
+      font-size:.68rem;
+      background:#fff7d6;
+      color:#17304d;
+      border:1px solid rgba(23,48,77,.12);
+    }
+    body[data-phase="playing"] .space.country { background:#e9fff4; border-color:#5fc99b; }
+    body[data-phase="playing"] .space.ocean { background:#d8f8ff; border-color:#53c7df; }
+    body[data-phase="playing"] .space.continent { background:#fff1d8; border-color:#f0a856; }
+    body[data-phase="playing"] .space.quiz { background:#eaf4ff; border-color:#6daee8; }
+    body[data-phase="playing"] .space.chance { background:#fff0bb; border-color:#f0be32; }
+    body[data-phase="playing"] .space.chance::before { background:#f0be32; }
+    body[data-phase="playing"] .space.start { background:#fff7d6; border-color:#f0be32; }
+    .token {
+      width:24px !important;
+      height:32px !important;
+      border:0 !important;
+      border-radius:50% 50% 42% 42% !important;
+      background:var(--piece,#1677c7) !important;
+      box-shadow:
+        inset 0 5px 5px rgba(255,255,255,.48),
+        inset 0 -6px 7px rgba(0,0,0,.18),
+        0 5px 0 rgba(0,0,0,.2),
+        0 10px 14px rgba(0,0,0,.28) !important;
+      flex:0 0 auto;
+    }
+    .token::before {
+      width:17px !important;
+      height:17px !important;
+      top:-8px !important;
+    }
+    .token::after {
+      width:32px !important;
+      height:10px !important;
+      bottom:-5px !important;
+    }
+    .player .token,
+    .active-player .token { transform:scale(.78); transform-origin:center; }
+    body[data-phase="playing"] .tokens {
+      min-height:30px;
+      gap:8px;
+      padding-bottom:4px;
+      align-content:flex-end;
+    }
+    body[data-phase="playing"] .center-grid {
+      gap:7px;
+    }
+    body[data-phase="playing"] .mini {
+      min-height:0;
+      padding:7px;
+    }
+    body[data-phase="playing"] .mini span {
+      font-size:.76rem;
+      line-height:1.28;
+    }
+    body[data-phase="playing"] .turn-box::before {
+      content:"현재 차례";
+      display:block;
+      width:max-content;
+      margin:-2px auto 10px;
+      padding:4px 12px;
+      border-radius:999px;
+      background:#17304d;
+      color:#fff7d6;
+      font-size:.78rem;
+      font-weight:900;
+    }
+    body[data-phase="playing"] .mission {
+      font-size:1.05rem;
+      line-height:1.38;
+      border-color:#f0be32;
+    }
+    body[data-phase="playing"] .travel-card {
+      min-height:150px;
+      border-color:#17304d;
+      background:
+        linear-gradient(90deg, transparent 0 48%, rgba(23,48,77,.12) 49% 51%, transparent 52%),
+        linear-gradient(135deg,#fffdf4,#e6f8ff);
+    }
+    body[data-phase="playing"] .travel-card b { font-size:1.18rem; }
+    body[data-phase="playing"] .travel-card .choice {
+      min-height:46px;
+      text-align:center;
+    }
+    body[data-phase="playing"] .scoreboard {
+      padding-top:4px;
+      max-height:150px;
+    }
+    body[data-phase="playing"] .player {
+      grid-template-columns:34px 1fr auto;
+      min-height:50px;
+      padding:6px;
+    }
+    body[data-phase="playing"] .player small {
+      font-size:.76rem;
+      line-height:1.25;
+    }
+    body[data-phase="playing"] .score {
+      font-size:.85rem;
+    }
+    body[data-phase="playing"] .player:not(.active):not(.mine) { opacity:.82; }
+    body[data-phase="playing"] .game-status {
+      margin-top:10px;
+      padding:10px 14px;
+      font-size:.95rem;
+    }
     @media (max-width:1050px) {
       .layout { grid-template-columns:1fr; }
       .side-panel { grid-template-columns:1fr 1fr; }
@@ -461,11 +662,11 @@
           <div class="mission" id="missionText">이름을 넣고 참가하세요.</div>
           <div class="dice" id="dice">1</div>
           <div class="actions">
-            <button id="rollDice">주사위</button>
-            <button class="warn" id="showCard">카드 보기</button>
-            <button class="good" id="buySpace">사기</button>
-            <button class="light" id="sellSpace">팔기</button>
-            <button class="wide dark" id="nextTurn">다음 차례</button>
+            <button id="rollDice">🎲 주사위 굴리기</button>
+            <button class="warn" id="showCard">🛂 카드 읽기</button>
+            <button class="good" id="buySpace">🏠 마일리지로 사기</button>
+            <button class="light" id="sellSpace">💰 팔기</button>
+            <button class="wide dark" id="nextTurn">➡️ 차례 넘기기</button>
           </div>
         </div>
         <div class="travel-card" id="travelCard">
@@ -544,6 +745,13 @@
       if (space.type === "ocean") return 6;
       return 0;
     }
+    function propertyRent(space) {
+      if (!space) return 0;
+      if (space.type === "country") return 2;
+      if (space.type === "continent") return 3;
+      if (space.type === "ocean") return 4;
+      return 0;
+    }
     function currentPlayer() {
       return state && state.players[state.current];
     }
@@ -593,17 +801,18 @@
         cell.style.gridColumn = pos.gridColumn;
         cell.style.gridRow = pos.gridRow;
         const owner = state.players.find(p => state.properties && state.properties[i] === p.id);
-        cell.innerHTML = `<div><div class="kind"><span class="emoji">${emojiFor(space.type)}</span> ${kindLabel(space.type)}</div><div class="name">${space.name}</div><div class="meta">${space.meta || ""}</div></div>${owner ? `<div class="owner">${owner.name} 소유</div>` : ""}<div class="tokens"></div>`;
+        const price = isBuyable(space) ? `<div class="meta">구입 ${propertyCost(space)}M · 통행료 ${propertyRent(space)}M</div>` : `<div class="meta">${space.meta || ""}</div>`;
+        cell.innerHTML = `<div><div class="kind"><span class="emoji">${emojiFor(space.type)}</span> ${kindLabel(space.type)}</div><div class="name">${space.name}</div>${price}</div>${owner ? `<div class="owner">${owner.name} 소유</div>` : ""}<div class="tokens"></div>`;
         board.appendChild(cell);
       });
       const center = document.createElement("div");
       center.className = "space center";
       center.innerHTML = `
-        <h2 class="center-title">대륙과 대양을 지나 나라 도장을 모으세요</h2>
+        <h2 class="center-title">세계 여행 보드판</h2>
         <div class="center-grid">
-          <div class="mini"><b>모둠 방</b><span>방 코드를 1~6으로 나누면 여러 모둠이 동시에 플레이합니다.</span></div>
-          <div class="mini"><b>사고 팔기</b><span>나라, 대륙, 대양을 사면 다른 친구가 도착할 때 통행료를 받습니다.</span></div>
-          <div class="mini"><b>황금열쇠</b><span>이동, 보너스, 감점 같은 특별 카드가 바로 적용됩니다.</span></div>
+          <div class="mini"><b>🛂 여권 도장</b><span>문제를 맞히며 나라와 대륙 도장을 모읍니다.</span></div>
+          <div class="mini"><b>🏠 사고 팔기</b><span>정답을 맞힌 칸만 살 수 있고, 친구가 오면 통행료를 받습니다.</span></div>
+          <div class="mini"><b>🔑 황금열쇠</b><span>이동, 보너스, 감점 같은 여행 사건이 바로 일어납니다.</span></div>
         </div>`;
       board.appendChild(center);
     }
@@ -629,7 +838,7 @@
         const row = document.createElement("div");
         row.className = `player ${idx === state.current && state.phase === "playing" ? "active" : ""} ${p.id === myId ? "mine" : ""}`;
         const place = state.boardSpaces[p.pos]?.name || "출발";
-        row.innerHTML = `<span class="token" style="--piece:${p.color}"></span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>도장 ${p.stamps.length}개 · 현재 ${place}</small></div><div class="score">${scoreOf(p)}M</div>`;
+        row.innerHTML = `<span class="token" style="--piece:${p.color}"></span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>마일리지 ${p.score}M · 도장 ${p.stamps.length}개 · 현재 ${place}</small></div><div class="score">총 ${scoreOf(p)}점</div>`;
         playersEl.appendChild(row);
       });
     }
@@ -663,12 +872,12 @@
       else if (!mine) mission = `${cp?.name || "친구"} 차례를 기다리세요.`;
       else if (!state.rolled) mission = "주사위를 굴리세요.";
       else if (pending && pending.playerId === myId && !pending.answered) mission = "카드를 읽고 정답을 고르세요.";
-      else if (hasBuyRight && !ownerId) mission = `${currentSpace.name}을 살 수 있어요.`;
+      else if (hasBuyRight && !ownerId) mission = `${currentSpace.name}을 ${propertyCost(currentSpace)}마일리지로 살 수 있어요. 친구가 오면 ${propertyRent(currentSpace)}마일리지를 받아요.`;
       else mission = "다음 차례로 넘기세요.";
       missionEl.textContent = mission;
       statusEl.textContent = state.phase === "playing"
-        ? `현재 위치: ${cp ? state.boardSpaces[cp.pos].name : "-"} · 방 ${state.roomCode} · 마일리지로 땅을 사고 통행료를 받아요.`
-        : `방 ${state.roomCode || roomCode} · 모둠별 방 코드를 1~6으로 나눠 접속하세요.`;
+        ? `현재 위치: ${cp ? state.boardSpaces[cp.pos].name : "-"} · ${cp ? `${cp.name} 마일리지 ${cp.score}M` : ""} · 내 땅에 친구가 오면 통행료를 받아요.`
+        : `방 ${state.roomCode || roomCode} · 2~6명이 참가합니다. 시작 마일리지는 20M입니다.`;
     }
     function renderLog() {
       logEl.innerHTML = "";
@@ -705,7 +914,10 @@
       if (!panel) return;
       if (!card) {
         panel.className = "travel-card empty";
-        panel.innerHTML = `<b>🛂 여권 카드</b><p>${currentSpace ? `현재 여행지는 ${currentSpace.name}입니다.` : "주사위를 굴리면 도착 카드가 여기에 나타납니다."}</p>`;
+        const landText = currentSpace && isBuyable(currentSpace)
+          ? `<p>구입 ${propertyCost(currentSpace)}M · 통행료 ${propertyRent(currentSpace)}M</p>`
+          : "";
+        panel.innerHTML = `<b>🛂 여권 카드</b><p>${currentSpace ? `현재 여행지는 ${currentSpace.name}입니다.` : "주사위를 굴리면 도착 카드가 여기에 나타납니다."}</p>${landText}`;
         return;
       }
       panel.className = "travel-card";
@@ -718,7 +930,8 @@
         panel.innerHTML = `<b>🔑 ${card.title}</b><p>${card.text}</p><p>황금열쇠 효과가 바로 적용되었습니다.</p>`;
         return;
       }
-      panel.innerHTML = `<b>🧭 ${card.space.name} 미션</b><p>${card.question}</p><div class="choices"></div><div class="explain">${card.answered ? card.explain : "정답을 맞히면 이 칸을 살 수 있어요."}</div>`;
+      const buyInfo = isBuyable(card.space) ? ` 정답을 맞히면 ${propertyCost(card.space)}M으로 사고, 친구가 오면 ${propertyRent(card.space)}M 통행료를 받아요.` : "";
+      panel.innerHTML = `<b>🧭 ${card.space.name} 미션</b><p>${card.question}</p><div class="choices"></div><div class="explain">${card.answered ? card.explain : `정답을 맞히면 2M을 얻습니다.${buyInfo}`}</div>`;
       const choices = panel.querySelector(".choices");
       card.choices.forEach((text, idx) => {
         const btn = document.createElement("button");
@@ -778,7 +991,7 @@
       if (modal.dataset.auto === "result") return;
       modal.dataset.auto = "result";
       modalTitle.textContent = "최종 결과";
-      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="--piece:${p.color}"></span><div><b>${i + 1}위 ${p.name}</b><small>도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳</small></div><b>${scoreOf(p)}M</b></div>`).join("")}</div>`;
+      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="--piece:${p.color}"></span><div><b>${i + 1}위 ${p.name}</b><small>마일리지 ${p.score}M · 도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳</small></div><b>총 ${scoreOf(p)}점</b></div>`).join("")}</div>`;
       modalActions.innerHTML = `<button class="good" id="closeResult">확인</button>`;
       document.getElementById("closeResult").onclick = closeModal;
       openModal();

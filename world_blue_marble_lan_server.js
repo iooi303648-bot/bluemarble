@@ -8,7 +8,7 @@ const ROOT = __dirname;
 
 const colors = ["#e44c65", "#1f9d72", "#1677c7", "#f4b63d", "#7b61d1", "#293241"];
 const boardSpaces = [
-  {type:"start", name:"출발", meta:"한 바퀴마다 3점"},
+  {type:"start", name:"출발", meta:"한 바퀴마다 3M"},
   {type:"quiz", name:"위도", meta:"적도와 남북 위치"},
   {type:"country", name:"대한민국", continent:"아시아", meta:"반도에 있는 우리나라"},
   {type:"ocean", name:"태평양", meta:"가장 넓은 대양"},
@@ -66,14 +66,14 @@ const cards = [
 ];
 
 const chanceCards = [
-  {title:"위성 영상 확인", text:"디지털 지도를 확대해 정확한 위치를 찾았습니다. 2점을 얻습니다.", score:2},
+  {title:"위성 영상 확인", text:"디지털 지도를 확대해 정확한 위치를 찾았습니다. 2마일리지를 얻습니다.", score:2},
   {title:"경도 헷갈림", text:"동경과 서경을 바꾸어 적었습니다. 다음 차례에 주사위가 1 줄어듭니다.", penalty:"slow"},
   {title:"대양 항해", text:"태평양을 건너 넓은 바다를 체험했습니다. 앞으로 3칸 이동합니다.", move:3},
-  {title:"세계 지도 완성", text:"대륙과 대양 이름을 잘 정리했습니다. 3점을 얻습니다.", score:3},
+  {title:"세계 지도 완성", text:"대륙과 대양 이름을 잘 정리했습니다. 3마일리지를 얻습니다.", score:3},
   {title:"길 잃은 여행자", text:"위도와 경도 표시를 다시 확인합니다. 뒤로 2칸 이동합니다.", move:-2},
-  {title:"친구 설명", text:"나라의 위치와 영토 특징을 친구에게 설명했습니다. 나라 도장 1개가 있으면 2점을 얻습니다.", stampScore:2},
-  {title:"탐험 보고서", text:"지도, 지구본, 디지털 영상 자료의 장점을 비교했습니다. 2점을 얻습니다.", score:2},
-  {title:"출발점 비행", text:"공항으로 이동합니다. 출발점으로 이동하고 1점을 얻습니다.", goStart:true}
+  {title:"친구 설명", text:"나라의 위치와 영토 특징을 친구에게 설명했습니다. 나라 도장 1개가 있으면 2마일리지를 얻습니다.", stampScore:2},
+  {title:"탐험 보고서", text:"지도, 지구본, 디지털 영상 자료의 장점을 비교했습니다. 2마일리지를 얻습니다.", score:2},
+  {title:"출발점 비행", text:"공항으로 이동합니다. 출발점으로 이동하고 1마일리지를 얻습니다.", goStart:true}
 ];
 
 let state = freshState("1");
@@ -189,7 +189,7 @@ function movePlayer(p, steps) {
   const next = (p.pos + steps + boardSpaces.length) % boardSpaces.length;
   if (steps > 0 && old + steps >= boardSpaces.length) {
     p.score += 3;
-    log(`${p.name}이 출발을 지나 3점을 얻었습니다.`);
+    log(`${p.name}이 출발을 지나 3마일리지를 얻었습니다.`);
   }
   p.pos = next;
 }
@@ -307,7 +307,7 @@ function handleAction(body) {
       const rent = propertyRent(space);
       p.score = Math.max(0, p.score - rent);
       if (owner) owner.score += rent;
-      log(`${p.name}이 ${space.name} 통행료 ${rent}점을 ${owner ? owner.name : "소유자"}에게 냈습니다.`);
+      log(`${p.name}이 ${space.name} 통행료 ${rent}마일리지를 ${owner ? owner.name : "소유자"}에게 냈습니다.`);
     }
     if (["quiz", "country", "continent", "ocean"].includes(space.type)) createQuiz(space, p.id);
     if (space.type === "chance") applyChance(p.id);
@@ -321,11 +321,11 @@ function handleAction(body) {
     if (state.buyRights[p.id] !== p.pos) throw new Error("문제를 맞힌 칸만 살 수 있습니다.");
     if (state.properties[p.pos]) throw new Error("이미 누군가 산 칸입니다.");
     const cost = propertyCost(space);
-    if (p.score < cost) throw new Error(`${cost}점이 필요합니다.`);
+    if (p.score < cost) throw new Error(`${cost}마일리지가 필요합니다.`);
     p.score -= cost;
     state.properties[p.pos] = p.id;
     delete state.buyRights[p.id];
-    log(`${p.name}이 ${space.name}을 ${cost}점에 샀습니다.`);
+    log(`${p.name}이 ${space.name}을 ${cost}마일리지에 샀습니다.`);
     return {};
   }
 
@@ -335,7 +335,7 @@ function handleAction(body) {
     const refund = Math.ceil(propertyCost(space) * 0.7);
     delete state.properties[p.pos];
     p.score += refund;
-    log(`${p.name}이 ${space.name}을 팔아 ${refund}점을 받았습니다.`);
+    log(`${p.name}이 ${space.name}을 팔아 ${refund}마일리지를 받았습니다.`);
     return {};
   }
 
@@ -357,12 +357,12 @@ function handleAction(body) {
         log(`${p.name}이 ${space.name} 도장을 받았습니다.`);
       }
       if ((space.type === "continent" || space.type === "ocean") && !p.stamps.includes(space.name)) p.stamps.push(space.name);
-      state.lastResult = `${p.name} 정답! 2점을 얻었습니다.`;
+      state.lastResult = `${p.name} 정답! 2마일리지를 얻었습니다.`;
       log(state.lastResult);
     } else {
       delete state.buyRights[p.id];
       p.score = Math.max(0, p.score - 1);
-      state.lastResult = `${p.name} 아쉽습니다. 1점을 사용했습니다.`;
+      state.lastResult = `${p.name} 아쉽습니다. 1마일리지를 사용했습니다.`;
       log(state.lastResult);
     }
     return {};
