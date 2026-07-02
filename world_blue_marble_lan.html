@@ -223,7 +223,9 @@
     .mission { position:relative; margin:10px 0; padding:11px; border-radius:8px; background:linear-gradient(160deg,var(--gold-light),#fdf6e6); border:2px solid var(--gold); color:var(--navy); font-weight:900; text-align:center; box-shadow:0 5px 0 rgba(90,56,31,.14); }
 
     @keyframes tokenLand { 0%{ transform:scale(.3) translateY(-14px); opacity:0; } 60%{ transform:scale(1.2) translateY(2px); opacity:1; } 100%{ transform:scale(1) translateY(0); opacity:1; } }
-    .token.landing { animation:tokenLand .45s cubic-bezier(.34,1.56,.64,1); }
+    .token.landing { animation:tokenLand .35s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes tokenHop { 0%{ transform:translateY(0) scale(1); } 45%{ transform:translateY(-11px) scale(1.08); } 100%{ transform:translateY(0) scale(1); } }
+    .token.hop { animation:tokenHop .1s ease-out; }
 
     @keyframes choicePop { 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
     @keyframes choiceShake { 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-6px); } 40%{ transform:translateX(6px); } 60%{ transform:translateX(-4px); } 80%{ transform:translateX(4px); } }
@@ -256,6 +258,22 @@
 
     .confetti-piece { position:fixed; top:-10px; width:8px; height:14px; opacity:.9; z-index:50; animation:confettiFall linear forwards; }
     @keyframes confettiFall { to { transform:translateY(110vh) rotate(540deg); opacity:0; } }
+
+    .dice-overlay {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:36px;
+      opacity:0; pointer-events:none; transition:opacity .3s ease; z-index:15;
+      background:radial-gradient(circle, rgba(0,0,0,.18), transparent 65%);
+    }
+    .dice-overlay.show { opacity:1; }
+    .die-scene { perspective:420px; }
+    .die { width:58px; height:58px; position:relative; transform-style:preserve-3d; transform:rotateX(0) rotateY(0); }
+    .die .face {
+      position:absolute; inset:0; width:58px; height:58px; box-sizing:border-box;
+      background:linear-gradient(160deg,#fff,#ecdfc0); border:3px solid var(--navy); border-radius:10px;
+      box-shadow:0 4px 10px rgba(0,0,0,.35);
+      display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); padding:9px;
+    }
+    .die .pip { width:9px; height:9px; border-radius:50%; background:var(--navy); justify-self:center; align-self:center; }
     .game-status { margin-top:16px; padding:14px 18px; border:3px solid var(--gold); border-radius:10px; background:linear-gradient(160deg,var(--parchment-1),var(--parchment-2)); box-shadow:0 12px 0 rgba(50,32,10,.2), 0 20px 40px rgba(0,0,0,.25); font-weight:900; text-align:center; color:var(--navy); }
 
     body[data-phase="playing"] .setup { display:none !important; }
@@ -315,6 +333,35 @@
     body[data-phase="playing"] .mini { min-height:0; padding:7px; }
     body[data-phase="playing"] .mini span { font-size:.76rem; line-height:1.28; }
 
+    @media (max-width:1440px) {
+      body[data-phase="playing"] .layout { grid-template-columns:minmax(680px,1fr) 296px; }
+    }
+    @media (max-height:820px) {
+      body[data-phase="playing"] .app { padding-top:6px; }
+      body[data-phase="playing"] header { padding:8px 14px; margin-bottom:6px; }
+      body[data-phase="playing"] h1 { font-size:1.3rem; }
+      body[data-phase="playing"] .board-panel { min-height:calc(100vh - 96px); padding:10px; }
+      body[data-phase="playing"] .board {
+        height:min(600px, calc(100vh - 130px)); min-height:400px;
+        grid-template-columns:repeat(9,minmax(46px,1fr)); gap:6px; padding:6px;
+      }
+      body[data-phase="playing"] .side-panel { max-height:calc(100vh - 92px); padding:8px; gap:6px; }
+      body[data-phase="playing"] .turn-box { padding:8px; }
+      body[data-phase="playing"] .mission { font-size:.88rem; padding:7px; margin:6px 0; }
+      body[data-phase="playing"] .dice { min-width:56px; height:56px; font-size:1.6rem; margin:4px auto 6px; }
+      body[data-phase="playing"] .turn-box .actions button { min-height:40px; font-size:.86rem; }
+      body[data-phase="playing"] .name { font-size:.64rem; min-height:1.4em; }
+      body[data-phase="playing"] .space.long .name { font-size:.56rem; }
+      body[data-phase="playing"] .space.xlong .name { font-size:.5rem; }
+      body[data-phase="playing"] .emoji, body[data-phase="playing"] .tile-icon { font-size:1rem; }
+      body[data-phase="playing"] .flag-badge { width:20px; height:15px; }
+      body[data-phase="playing"] .token { width:19px; height:19px; font-size:.72rem; }
+      body[data-phase="playing"] .travel-card { min-height:0; padding:8px; }
+      body[data-phase="playing"] .owned-panel { padding:8px 10px; }
+      body[data-phase="playing"] .owned-panel .owned-list { max-height:78px; overflow:auto; }
+      body[data-phase="playing"] .scoreboard { max-height:130px; overflow:auto; }
+      body[data-phase="playing"] .game-status { margin-top:6px; padding:7px 12px; font-size:.82rem; }
+    }
     @media (max-width:1050px) {
       .layout { grid-template-columns:1fr; }
       .side-panel { grid-template-columns:1fr 1fr; }
@@ -371,6 +418,10 @@
           <path d="M108 95l42-30 75 8 42 28 9 40-58 28-74-12-48-20zM315 68l75-26 110 18 66 54-25 55-88 14-72-24-61 18-40-44zM585 83l96-14 61 29 35 54-39 34-87-8-55-36zM424 198l55 8 37 45-12 72-43 54-50-31-15-70zM598 231l88-22 82 44 17 75-54 44-103-14-58-68zM195 236l70 11 48 43-22 73-74 25-62-40-9-64z"/>
         </svg>
         <div class="board" id="board"></div>
+        <div class="dice-overlay" id="diceOverlay">
+          <div class="die-scene"><div class="die" id="dieCube1"></div></div>
+          <div class="die-scene"><div class="die" id="dieCube2"></div></div>
+        </div>
       </div>
 
       <aside class="side-panel">
@@ -439,6 +490,7 @@
     let prevPlayers = {};
     let prevProperties = {};
     let prevCurrentId = null;
+    let pendingCardDelay = 0;
 
     const board = document.getElementById("board");
     const playersEl = document.getElementById("players");
@@ -479,6 +531,39 @@
     const conceptEmoji = {"위도":"🌐","경도":"🧭","대륙":"⛰️","디지털 지도":"💻","영토 특징":"📐","대양":"🌊"};
     const diceFaces = ["","⚀","⚁","⚂","⚃","⚄","⚅"];
     const buildLevelNames = ["대지", "별장", "빌딩", "호텔"];
+    const diePipPositions = {1:[5], 2:[3,7], 3:[3,5,7], 4:[1,3,7,9], 5:[1,3,5,7,9], 6:[1,4,7,3,6,9]};
+    const dieFaceRotation = {1:{x:0,y:0}, 2:{x:0,y:-90}, 3:{x:-90,y:0}, 4:{x:90,y:0}, 5:{x:0,y:90}, 6:{x:0,y:180}};
+    function pipHtml(n) {
+      const cells = Array(9).fill("");
+      (diePipPositions[n] || []).forEach(p => cells[p - 1] = '<span class="pip"></span>');
+      return cells.join("");
+    }
+    function buildDieFaces(el) {
+      el.innerHTML = `
+        <div class="face" style="transform:translateZ(29px)">${pipHtml(1)}</div>
+        <div class="face" style="transform:rotateY(180deg) translateZ(29px)">${pipHtml(6)}</div>
+        <div class="face" style="transform:rotateY(90deg) translateZ(29px)">${pipHtml(2)}</div>
+        <div class="face" style="transform:rotateY(-90deg) translateZ(29px)">${pipHtml(5)}</div>
+        <div class="face" style="transform:rotateX(90deg) translateZ(29px)">${pipHtml(3)}</div>
+        <div class="face" style="transform:rotateX(-90deg) translateZ(29px)">${pipHtml(4)}</div>`;
+    }
+    function rollDiceVisual(d1, d2) {
+      const overlay = document.getElementById("diceOverlay");
+      const cubes = [document.getElementById("dieCube1"), document.getElementById("dieCube2")];
+      overlay.classList.add("show");
+      [d1, d2].forEach((val, i) => {
+        const cube = cubes[i];
+        const rot = dieFaceRotation[val] || {x:0,y:0};
+        const spins = 2 + i;
+        cube.style.transition = "none";
+        cube.style.transform = `rotateX(${Math.random() * 360}deg) rotateY(${Math.random() * 360}deg)`;
+        void cube.offsetWidth;
+        cube.style.transition = "transform 1s cubic-bezier(.2,.75,.3,1)";
+        cube.style.transform = `rotateX(${rot.x + 360 * spins}deg) rotateY(${rot.y + 360 * spins}deg)`;
+      });
+      clearTimeout(rollDiceVisual.timer);
+      rollDiceVisual.timer = setTimeout(() => overlay.classList.remove("show"), 1250);
+    }
     function tileIcon(space) {
       if (space.type === "continent") return continentEmoji[space.name] || "🗺️";
       if (space.type === "ocean") return oceanEmoji[space.name] || "🌊";
@@ -641,22 +726,60 @@
         slot.innerHTML = owner ? `<div class="owner" style="--owner-color:${owner.color}">${owner.name}</div>` : "";
       });
     }
-    function renderTokens(movedPlayers) {
-      document.querySelectorAll(".space").forEach(s => s.classList.remove("current", "my-here"));
-      document.querySelectorAll(".tokens").forEach(t => t.innerHTML = "");
+    const animatingTokens = new Set();
+    const animGeneration = {};
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function placeTokenAt(p, pos, animClass) {
+      document.querySelectorAll(`.token[data-player="${p.id}"]`).forEach(t => t.remove());
+      const cell = document.querySelector(`.space[data-index="${pos}"]`);
+      if (!cell) return;
+      const tokensEl = cell.querySelector(".tokens");
+      if (!tokensEl) return;
+      const cp = currentPlayer();
+      const isMover = cp && cp.id === p.id && state.phase === "playing";
+      const token = document.createElement("span");
+      token.className = "token" + (animClass ? " " + animClass : (isMover ? " mover" : ""));
+      token.dataset.player = p.id;
+      token.style.setProperty("--piece", p.color);
+      token.textContent = pieceFor(p.id);
+      token.title = p.name;
+      tokensEl.appendChild(token);
+      if (p.id === myId) {
+        document.querySelectorAll(".space.my-here").forEach(s => s.classList.remove("my-here"));
+        cell.classList.add("my-here");
+      }
+    }
+    async function animateTokenSteps(p, fromPos, toPos) {
+      const myGen = (animGeneration[p.id] = (animGeneration[p.id] || 0) + 1);
+      animatingTokens.add(p.id);
+      const total = state.boardSpaces.length;
+      const dist = (toPos - fromPos + total) % total;
+      if (dist === 0 || dist > 24) {
+        placeTokenAt(p, toPos, "landing");
+        if (animGeneration[p.id] === myGen) animatingTokens.delete(p.id);
+        return;
+      }
+      let cur = fromPos;
+      for (let i = 0; i < dist; i++) {
+        if (animGeneration[p.id] !== myGen) return;
+        cur = (cur + 1) % total;
+        placeTokenAt(p, cur, i === dist - 1 ? "landing" : "hop");
+        await sleep(100);
+      }
+      if (animGeneration[p.id] === myGen) animatingTokens.delete(p.id);
+    }
+    function renderTokens() {
+      document.querySelectorAll(".space").forEach(s => s.classList.remove("current"));
       if (!state) return;
       state.players.forEach((p, idx) => {
-        const cell = document.querySelector(`.space[data-index="${p.pos}"]`);
-        if (!cell) return;
-        const token = document.createElement("span");
-        const isMover = idx === state.current && state.phase === "playing";
-        token.className = "token" + (movedPlayers && movedPlayers.has(p.id) ? " landing" : "") + (isMover ? " mover" : "");
-        token.style.setProperty("--piece", p.color);
-        token.textContent = pieceFor(p.id);
-        token.title = p.name;
-        cell.querySelector(".tokens").appendChild(token);
-        if (p.id === myId) cell.classList.add("my-here");
-        if (idx === state.current && state.phase === "playing") cell.classList.add("current");
+        if (idx === state.current && state.phase === "playing") {
+          const cell = document.querySelector(`.space[data-index="${p.pos}"]`);
+          if (cell) cell.classList.add("current");
+        }
+      });
+      state.players.forEach(p => {
+        if (animatingTokens.has(p.id)) return;
+        placeTokenAt(p, p.pos);
       });
     }
     function renderPlayers() {
@@ -844,11 +967,16 @@
     function render() {
       if (!state) return;
       const movedPlayers = detectMovedPlayers();
+      const moveFrom = {};
+      movedPlayers.forEach(id => {
+        moveFrom[id] = prevPlayers[id].pos;
+        animatingTokens.add(id);
+      });
       const soldTiles = detectNewlySold();
       const myScoreDelta = detectMyScoreDelta();
       const turnJustStarted = detectTurnStart();
       renderBoard();
-      renderTokens(movedPlayers);
+      renderTokens();
       renderPlayers();
       renderControls();
       renderTravelCard();
@@ -860,8 +988,12 @@
       if (myScoreDelta) floatScore(myScoreDelta);
       if (turnJustStarted) pulseTurnBox();
       updateSnapshot();
+      movedPlayers.forEach(id => {
+        const p = state.players.find(pl => pl.id === id);
+        if (p) animateTokenSteps(p, moveFrom[id], p.pos);
+      });
       if (state.phase === "finished") showResults();
-      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) showCard();
+      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId && Date.now() >= pendingCardDelay) showCard();
       else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
     }
     function renderMyProperties() {
@@ -1006,7 +1138,11 @@
     document.getElementById("endGame").onclick = async () => { try { await api("finish"); } catch (err) { alert(err.message); } };
     document.getElementById("rollDice").onclick = async () => {
       diceEl.classList.add("rolling");
-      try { await api("roll"); }
+      pendingCardDelay = Date.now() + 1100;
+      try {
+        await api("roll");
+        if (Array.isArray(state.dice)) rollDiceVisual(state.dice[0], state.dice[1]);
+      }
       catch (err) { alert(err.message); }
       finally { setTimeout(() => diceEl.classList.remove("rolling"), 500); }
     };
@@ -1034,6 +1170,8 @@
       refresh();
     });
     document.getElementById("playerName").addEventListener("input", e => localStorage.setItem("worldBlueMarbleLanName", e.target.value));
+    buildDieFaces(document.getElementById("dieCube1"));
+    buildDieFaces(document.getElementById("dieCube2"));
     refresh();
     setInterval(refresh, 800);
   </script>
