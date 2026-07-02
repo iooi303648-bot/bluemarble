@@ -288,6 +288,33 @@
       border: 2px solid #d9e8f4;
       box-shadow: 0 5px 0 rgba(24,73,106,.08);
     }
+    .travel-card {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 3px dashed #2f8cc2;
+      background:
+        radial-gradient(circle at 0 50%, transparent 0 12px, rgba(255,255,255,.96) 13px),
+        radial-gradient(circle at 100% 50%, transparent 0 12px, rgba(255,255,255,.96) 13px),
+        linear-gradient(135deg,#fffdf4,#e5f7ff);
+      box-shadow: 0 8px 0 rgba(24,73,106,.12), 0 18px 30px rgba(0,0,0,.1);
+      color: #17304d;
+    }
+    .travel-card b {
+      font-size: 1.05rem;
+    }
+    .travel-card p {
+      margin: 0;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+    .travel-card .choices {
+      margin-bottom: 0;
+    }
+    .travel-card.empty {
+      opacity: .72;
+    }
     .mission {
       margin: 10px 0;
       padding: 12px;
@@ -318,7 +345,7 @@
     }
     body[data-phase="playing"] h1 { font-size: clamp(1.45rem, 2.4vw, 2.4rem); }
     body[data-phase="playing"] .subtitle { display: none; }
-    body[data-phase="playing"] .layout { grid-template-columns: minmax(720px, 1fr) 330px; }
+    body[data-phase="playing"] .layout { grid-template-columns: minmax(760px, 1fr) 310px; }
     body[data-phase="playing"] .board-panel { min-height: calc(100vh - 142px); }
     body[data-phase="playing"] .side-panel {
       position: sticky;
@@ -353,6 +380,18 @@
     body[data-phase="playing"] .log {
       max-height: 94px;
       opacity: .86;
+    }
+    body[data-phase="playing"] .scoreboard h2,
+    body[data-phase="playing"] .log-panel h2 {
+      font-size: .8rem !important;
+      color: #52708d;
+    }
+    body[data-phase="playing"] .scoreboard {
+      max-height: 210px;
+      overflow: auto;
+    }
+    body[data-phase="playing"] .log-panel {
+      opacity: .66;
     }
     body[data-phase="playing"] .players { gap: 6px; }
     @media (max-width:1050px) {
@@ -429,11 +468,15 @@
             <button class="wide dark" id="nextTurn">다음 차례</button>
           </div>
         </div>
-        <div>
+        <div class="travel-card" id="travelCard">
+          <b>여권 카드</b>
+          <p>주사위를 굴리면 도착한 곳의 카드가 여기에 나타납니다.</p>
+        </div>
+        <div class="scoreboard">
           <h2 style="margin:0 0 8px;font-size:1rem;">탐험 기록</h2>
           <div class="players" id="players"></div>
         </div>
-        <div style="grid-column:1/-1;">
+        <div class="log-panel" style="grid-column:1/-1;">
           <h2 style="margin:0 0 8px;font-size:1rem;">진행 알림</h2>
           <div class="log" id="log"></div>
         </div>
@@ -647,16 +690,59 @@
       renderTokens();
       renderPlayers();
       renderControls();
+      renderTravelCard();
       renderLog();
       renderRoom();
       if (state.phase === "finished") showResults();
-      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) showCard();
+      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId) lastCardId = state.pendingCard.id;
       else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
+    }
+    function renderTravelCard() {
+      const panel = document.getElementById("travelCard");
+      const card = state && state.pendingCard;
+      const cp = currentPlayer();
+      const currentSpace = cp && state.boardSpaces[cp.pos];
+      if (!panel) return;
+      if (!card) {
+        panel.className = "travel-card empty";
+        panel.innerHTML = `<b>🛂 여권 카드</b><p>${currentSpace ? `현재 여행지는 ${currentSpace.name}입니다.` : "주사위를 굴리면 도착 카드가 여기에 나타납니다."}</p>`;
+        return;
+      }
+      panel.className = "travel-card";
+      if (card.playerId !== myId) {
+        const owner = state.players.find(p => p.id === card.playerId);
+        panel.innerHTML = `<b>🛂 ${owner ? owner.name : "친구"}의 카드</b><p>친구가 카드를 해결하는 중입니다. 잠깐 기다리세요.</p>`;
+        return;
+      }
+      if (card.type === "chance") {
+        panel.innerHTML = `<b>🔑 ${card.title}</b><p>${card.text}</p><p>황금열쇠 효과가 바로 적용되었습니다.</p>`;
+        return;
+      }
+      panel.innerHTML = `<b>🧭 ${card.space.name} 미션</b><p>${card.question}</p><div class="choices"></div><div class="explain">${card.answered ? card.explain : "정답을 맞히면 이 칸을 살 수 있어요."}</div>`;
+      const choices = panel.querySelector(".choices");
+      card.choices.forEach((text, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = text;
+        if (card.answered) {
+          btn.disabled = true;
+          if (idx === card.correct) btn.classList.add("correct");
+          if (idx === card.chosen && idx !== card.correct) btn.classList.add("wrong");
+        } else {
+          btn.onclick = async () => {
+            try { await api("answer", {choice:idx}); }
+            catch (err) { alert(err.message); }
+          };
+        }
+        choices.appendChild(btn);
+      });
     }
     function showCard() {
       const card = state.pendingCard;
       if (!card) return;
       lastCardId = card.id;
+      renderTravelCard();
+      return;
       modal.dataset.auto = "card";
       modalTitle.textContent = card.type === "quiz" ? `${card.space.name} 카드` : card.title;
       if (card.type === "chance") {
