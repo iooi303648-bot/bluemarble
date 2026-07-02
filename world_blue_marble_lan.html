@@ -379,15 +379,30 @@
       "대한민국":"kr", "일본":"jp", "중국":"cn", "사우디아라비아":"sa", "이집트":"eg", "케냐":"ke",
       "프랑스":"fr", "영국":"gb", "미국":"us", "캐나다":"ca", "브라질":"br", "오스트레일리아":"au"
     };
+    const flagCss = {
+      kr: "linear-gradient(180deg,#fff 0 34%,#c60c30 34% 66%,#003478 66% 100%)",
+      jp: "radial-gradient(circle at 50% 50%,#bc002d 0 34%,#fff 35% 100%)",
+      cn: "#de2910",
+      sa: "#046a38",
+      eg: "linear-gradient(180deg,#ce1126 0 33%,#fff 33% 66%,#000 66% 100%)",
+      ke: "linear-gradient(180deg,#000 0 30%,#fff 30% 36%,#bb0000 36% 64%,#fff 64% 70%,#006600 70% 100%)",
+      fr: "linear-gradient(90deg,#0055a4 0 33%,#fff 33% 66%,#ef4135 66% 100%)",
+      gb: "linear-gradient(180deg,#00247d 0 34%,#fff 34% 44%,#cf142b 44% 56%,#fff 56% 66%,#00247d 66% 100%)",
+      us: "linear-gradient(180deg,#b22234 0 20%,#fff 20% 40%,#b22234 40% 60%,#fff 60% 80%,#b22234 80% 100%)",
+      ca: "linear-gradient(90deg,#ff0000 0 25%,#fff 25% 75%,#ff0000 75% 100%)",
+      br: "#009739",
+      au: "#00247d"
+    };
+    function flagFallback(img) {
+      const badge = img.parentElement;
+      badge.style.background = flagCss[img.dataset.code] || "#ccc";
+      img.remove();
+    }
     const continentEmoji = {"아시아":"🌏","아프리카":"🌍","북아메리카":"🗽","남아메리카":"🌴","남극 대륙":"🧊","오세아니아":"🏝️"};
     const oceanEmoji = {"태평양":"🌊","대서양":"⚓","인도양":"🐚","남극해":"🧊"};
     const conceptEmoji = {"위도":"🌐","경도":"🧭","대륙":"⛰️","디지털 지도":"💻","영토 특징":"📐","대양":"🌊"};
     const tokenPieces = ["✈️","🚌","🚢","🚂","🎈","🛶"];
     const diceFaces = ["","⚀","⚁","⚂","⚃","⚄","⚅"];
-
-    function flagEmoji(code) {
-      return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
-    }
     function tileIcon(space) {
       if (space.type === "continent") return continentEmoji[space.name] || "🗺️";
       if (space.type === "ocean") return oceanEmoji[space.name] || "🌊";
@@ -487,7 +502,7 @@
         const price = isBuyable(space) ? `<div class="meta">구입 ${propertyCost(space)}M · 통행료 ${propertyRent(space)}M</div>` : `<div class="meta">${space.meta || ""}</div>`;
         const code = countryCodes[space.name];
         const iconHtml = space.type === "country" && code
-          ? `<span class="flag-badge"><img src="assets/flags/${code}.png" alt="${space.name} 국기" onerror="this.parentElement.classList.add('flag-fallback');this.parentElement.textContent='${flagEmoji(code)}'"></span>`
+          ? `<span class="flag-badge"><img src="assets/flags/${code}.png" alt="${space.name} 국기" data-code="${code}" onerror="flagFallback(this)"></span>`
           : `<span class="emoji">${tileIcon(space)}</span>`;
         cell.innerHTML = `<div><div class="kind">${iconHtml} ${kindLabel(space.type)}</div><div class="name">${space.name}</div>${price}</div>${owner ? `<div class="owner">${owner.name} 소유</div>` : ""}<div class="tokens"></div>`;
         board.appendChild(cell);
