@@ -430,9 +430,6 @@
       localStorage.setItem("worldBlueMarbleRoomCode", roomCode);
       return roomCode;
     }
-    function scoreOf(p) {
-      return p.score + p.stamps.length * 3 + new Set(p.continents).size * 2;
-    }
     function isBuyable(space) {
       return space && ["country", "continent", "ocean"].includes(space.type);
     }
@@ -488,6 +485,13 @@
     }
     function renderBoard() {
       if (!state || !state.boardSpaces) return;
+      if (board.dataset.built !== String(state.boardSpaces.length)) {
+        buildBoard();
+        board.dataset.built = String(state.boardSpaces.length);
+      }
+      updateOwners();
+    }
+    function buildBoard() {
       board.innerHTML = "";
       state.boardSpaces.forEach((space, i) => {
         const pos = boardPos(i);
@@ -498,13 +502,12 @@
         cell.dataset.index = i;
         cell.style.gridColumn = pos.gridColumn;
         cell.style.gridRow = pos.gridRow;
-        const owner = state.players.find(p => state.properties && state.properties[i] === p.id);
         const price = isBuyable(space) ? `<div class="meta">구입 ${propertyCost(space)}M · 통행료 ${propertyRent(space)}M</div>` : `<div class="meta">${space.meta || ""}</div>`;
         const code = countryCodes[space.name];
         const iconHtml = space.type === "country" && code
           ? `<span class="flag-badge"><img src="assets/flags/${code}.png" alt="${space.name} 국기" data-code="${code}" onerror="flagFallback(this)"></span>`
           : `<span class="emoji">${tileIcon(space)}</span>`;
-        cell.innerHTML = `<div><div class="kind">${iconHtml} ${kindLabel(space.type)}</div><div class="name">${space.name}</div>${price}</div>${owner ? `<div class="owner">${owner.name} 소유</div>` : ""}<div class="tokens"></div>`;
+        cell.innerHTML = `<div><div class="kind">${iconHtml} ${kindLabel(space.type)}</div><div class="name">${space.name}</div>${price}</div><div class="owner-slot"></div><div class="tokens"></div>`;
         board.appendChild(cell);
       });
       const center = document.createElement("div");
@@ -518,6 +521,14 @@
           <div class="mini"><b>🔑 황금열쇠</b><span>이동, 보너스, 감점 같은 여행 사건이 바로 일어납니다.</span></div>
         </div>`;
       board.appendChild(center);
+    }
+    function updateOwners() {
+      state.boardSpaces.forEach((space, i) => {
+        const slot = document.querySelector(`.space[data-index="${i}"] .owner-slot`);
+        if (!slot) return;
+        const owner = state.players.find(p => state.properties && state.properties[i] === p.id);
+        slot.innerHTML = owner ? `<div class="owner">${owner.name} 소유</div>` : "";
+      });
     }
     function renderTokens() {
       document.querySelectorAll(".space").forEach(s => s.classList.remove("current"));
@@ -542,7 +553,7 @@
         const row = document.createElement("div");
         row.className = `player ${idx === state.current && state.phase === "playing" ? "active" : ""} ${p.id === myId ? "mine" : ""}`;
         const place = state.boardSpaces[p.pos]?.name || "출발";
-        row.innerHTML = `<span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>마일리지 ${p.score}M · 도장 ${p.stamps.length}개 · 현재 ${place}</small></div><div class="score">총 ${scoreOf(p)}점</div>`;
+        row.innerHTML = `<span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${p.name}${p.id === myId ? " · 나" : ""}</b><small>도장 ${p.stamps.length}개 · 현재 ${place}</small></div><div class="score">${p.score}M</div>`;
         playersEl.appendChild(row);
       });
     }
@@ -664,7 +675,7 @@
       if (modal.dataset.auto === "result") return;
       modal.dataset.auto = "result";
       modalTitle.textContent = "최종 결과";
-      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${i + 1}위 ${p.name}</b><small>마일리지 ${p.score}M · 도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳</small></div><b>총 ${scoreOf(p)}점</b></div>`).join("")}</div>`;
+      modalBody.innerHTML = `<p class="question">${state.finishedReason || "게임을 마쳤습니다."}</p><div class="results">${state.ranking.map((p, i) => `<div class="result-row"><span class="token" style="--piece:${p.color}">${pieceFor(p.id)}</span><div><b>${i + 1}위 ${p.name}</b><small>도장 ${p.stamps.length}개 · 대륙 ${new Set(p.continents).size}곳</small></div><b>${p.score}M</b></div>`).join("")}</div>`;
       modalActions.innerHTML = `<button class="good" id="closeResult">확인</button>`;
       document.getElementById("closeResult").onclick = closeModal;
       openModal();

@@ -114,7 +114,7 @@ function publicState() {
   return {
     ...state,
     boardSpaces,
-    ranking: [...state.players].sort((a, b) => scoreOf(b) - scoreOf(a)),
+    ranking: [...state.players].sort((a, b) => b.score - a.score),
     rooms: Array.from(rooms.values()).map(room => ({
       roomCode: room.roomCode,
       phase: room.phase,
@@ -122,10 +122,6 @@ function publicState() {
     })),
     serverTime: Date.now()
   };
-}
-
-function scoreOf(p) {
-  return p.score + p.stamps.length * 3 + new Set(p.continents).size * 2;
 }
 
 function isBuyable(space) {
