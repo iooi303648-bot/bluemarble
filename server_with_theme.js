@@ -8,10 +8,12 @@ fs.createReadStream = function themedCreateReadStream(filePath, options) {
   if (normalized.endsWith("world_blue_marble_lan.html")) {
     let html = fs.readFileSync(filePath, "utf8");
     if (!html.includes("assets/ui-polish.css")) {
-      html = html.replace("</head>", "  <link rel=\"stylesheet\" href=\"/assets/ui-polish.css?v=theme-20260703b\">\n</head>");
+      html = html.replace("</head>", "  <link rel=\"stylesheet\" href=\"/assets/ui-polish.css?v=theme-20260703c\">\n  <link rel=\"stylesheet\" href=\"/assets/ui-compact-play.css?v=theme-20260703c\">\n</head>");
+    } else if (!html.includes("assets/ui-compact-play.css")) {
+      html = html.replace("</head>", "  <link rel=\"stylesheet\" href=\"/assets/ui-compact-play.css?v=theme-20260703c\">\n</head>");
     }
     if (!html.includes("assets/ui-polish.js")) {
-      html = html.replace("</body>", "  <script src=\"/assets/ui-polish.js?v=theme-20260703b\"></script>\n</body>");
+      html = html.replace("</body>", "  <script src=\"/assets/ui-polish.js?v=theme-20260703c\"></script>\n</body>");
     }
     return Readable.from([html]);
   }
