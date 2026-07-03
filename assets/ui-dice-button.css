@@ -1,3 +1,25 @@
+body[data-phase="playing"] .turn-box .dice {
+  display: none !important;
+}
+
+body[data-phase="playing"] .turn-box .compact-actions,
+body[data-phase="playing"] .turn-box .actions {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+body[data-phase="playing"] .turn-box .actions button,
+body[data-phase="playing"] .turn-box .compact-actions button {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+  text-align: center !important;
+}
+
 body[data-phase="playing"] #rollDice {
   min-height: 54px !important;
   font-size: 0 !important;
@@ -13,4 +35,13 @@ body[data-phase="playing"] #rollDice::before {
 
 body[data-phase="playing"] #rollDice:disabled::before {
   opacity: .72;
+}
+
+body[data-phase="playing"] #showCard,
+body[data-phase="playing"] #buySpace,
+body[data-phase="playing"] #sellSpace,
+body[data-phase="playing"] #escapeIsland,
+body[data-phase="playing"] #launchSpace,
+body[data-phase="playing"] #nextTurn {
+  min-height: 46px !important;
 }
