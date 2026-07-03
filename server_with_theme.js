@@ -4,7 +4,7 @@ const Module = require("module");
 const { Readable } = require("stream");
 
 const originalCreateReadStream = fs.createReadStream.bind(fs);
-const THEME_VERSION = "theme-20260703l";
+const THEME_VERSION = "theme-20260703m";
 const THEME_CSS = [
   "ui-polish.css",
   "ui-compact-play.css",
