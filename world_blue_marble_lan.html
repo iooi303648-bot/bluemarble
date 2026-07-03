@@ -491,6 +491,7 @@
     let prevProperties = {};
     let prevCurrentId = null;
     let pendingCardDelay = 0;
+    let resultsDismissed = false;
 
     const board = document.getElementById("board");
     const playersEl = document.getElementById("players");
@@ -992,9 +993,13 @@
         const p = state.players.find(pl => pl.id === id);
         if (p) animateTokenSteps(p, moveFrom[id], p.pos);
       });
-      if (state.phase === "finished") showResults();
-      else if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId && Date.now() >= pendingCardDelay) showCard();
-      else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
+      if (state.phase === "finished") {
+        if (!resultsDismissed) showResults();
+      } else {
+        resultsDismissed = false;
+        if (state.pendingCard && state.pendingCard.id !== lastCardId && state.pendingCard.playerId === myId && Date.now() >= pendingCardDelay) showCard();
+        else if (!state.pendingCard && modal.classList.contains("open") && modal.dataset.auto === "card") closeModal();
+      }
     }
     function renderMyProperties() {
       const panel = document.getElementById("myProperties");
@@ -1113,7 +1118,11 @@
       openModal();
     }
     function openModal() { modal.classList.add("open"); }
-    function closeModal() { modal.classList.remove("open"); modal.dataset.auto = ""; }
+    function closeModal() {
+      if (modal.dataset.auto === "result") resultsDismissed = true;
+      modal.classList.remove("open");
+      modal.dataset.auto = "";
+    }
 
     document.getElementById("joinButton").onclick = async () => {
       try { await api("join", {name:document.getElementById("playerName").value}); }
