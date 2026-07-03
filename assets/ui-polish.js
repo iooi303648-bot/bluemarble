@@ -67,15 +67,20 @@
   function updateTopStats() {
     const stats = document.querySelector(".top-stats");
     if (!stats) return;
-    const room = clean(document.getElementById("roomInfo")?.textContent).match(/방\s*([^·\s]+)/)?.[1] || "-";
-    const count = clean(document.getElementById("roomInfo")?.textContent).match(/참가\s*(\d+\/6명)/)?.[1] || "0/6명";
+    const roomInfo = clean(document.getElementById("roomInfo")?.textContent);
+    const room = roomInfo.match(/방\s*([^·\s]+)/)?.[1] || "-";
+    const count = roomInfo.match(/참가\s*(\d+\/6명)/)?.[1] || "0/6명";
     const turn = clean(document.getElementById("activePlayer")?.textContent).replace("참가 대기 중", "대기 중") || "대기 중";
     const era = clean(document.getElementById("gameStatus")?.textContent).match(/(전반전|후반전)/)?.[1] || "여행 중";
-    stats.innerHTML = `
+    const html = `
       <span class="top-pill">방 ${room}</span>
       <span class="top-pill">${count}</span>
       <span class="top-pill">${era}</span>
       <span class="top-pill">${turn}</span>`;
+    if (stats.dataset.lastHtml !== html) {
+      stats.dataset.lastHtml = html;
+      stats.innerHTML = html;
+    }
   }
 
   function ensureCenterLive() {
@@ -112,7 +117,7 @@
     const hasCard = cardText && !cardText.includes("주사위를 굴리면");
     const title = hasCard ? "카드 알림" : place.name;
     const body = hasCard ? cardText.replace(/^여권 카드\s*/, "") : (mission || "현재 여행 상황을 확인하세요.");
-    live.innerHTML = `
+    const html = `
       <div class="live-eyebrow">${hasCard ? "방금 도착한 카드" : "현재 도착지"}</div>
       <h2 class="live-title">${hasCard ? "🛂 " : "🧭 "}${title}</h2>
       <p class="live-text">${body}</p>
@@ -121,20 +126,29 @@
         <div class="live-stat"><span>칸 정보</span>${place.meta || "이동 대기"}</div>
         <div class="live-stat"><span>다음 행동</span>${mission || "차례 확인"}</div>
       </div>`;
+    if (live.dataset.lastHtml !== html) {
+      live.dataset.lastHtml = html;
+      live.innerHTML = html;
+    }
   }
 
-  function applyPolish() {
+  function applyStructure() {
     ensureTopStats();
     buildSupportTabs();
     compactActionButtons();
+  }
+
+  function applyDynamicText() {
     updateTopStats();
     updateCenterLive();
   }
 
   ready(() => {
-    applyPolish();
-    setInterval(applyPolish, 700);
-    const observer = new MutationObserver(() => applyPolish());
-    observer.observe(document.body, {childList:true, subtree:true, characterData:true});
+    applyStructure();
+    applyDynamicText();
+    setInterval(() => {
+      applyStructure();
+      applyDynamicText();
+    }, 700);
   });
 })();
