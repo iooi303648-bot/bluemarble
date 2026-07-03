@@ -45,3 +45,95 @@ body[data-phase="playing"] #launchSpace,
 body[data-phase="playing"] #nextTurn {
   min-height: 46px !important;
 }
+
+body[data-phase="playing"] .space:not(.center) {
+  overflow: visible !important;
+  padding-bottom: 24px !important;
+}
+
+body[data-phase="playing"] .space:not(.center) > div:first-child {
+  min-height: 0 !important;
+}
+
+body[data-phase="playing"] .space:not(.center) .owner-slot {
+  position: absolute !important;
+  left: 4px !important;
+  right: 4px !important;
+  bottom: 21px !important;
+  height: 17px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+body[data-phase="playing"] .space:not(.center) .owner {
+  max-width: 100% !important;
+  height: 17px !important;
+  min-height: 17px !important;
+  padding: 1px 7px !important;
+  border-width: 1px !important;
+  border-radius: 999px !important;
+  font-size: .55rem !important;
+  line-height: 14px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body[data-phase="playing"] .space:not(.center) .tokens {
+  position: absolute !important;
+  left: 4px !important;
+  right: 4px !important;
+  bottom: 3px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  z-index: 3 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+body[data-phase="playing"] .space:not(.center) .tokens .token {
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  font-size: .58rem !important;
+  border-width: 2px !important;
+  margin: 0 !important;
+}
+
+@media (max-height: 760px), (max-width: 1180px) {
+  body[data-phase="playing"] .space:not(.center) {
+    padding-bottom: 22px !important;
+  }
+
+  body[data-phase="playing"] .space:not(.center) .owner-slot {
+    bottom: 19px !important;
+    height: 15px !important;
+  }
+
+  body[data-phase="playing"] .space:not(.center) .owner {
+    height: 15px !important;
+    min-height: 15px !important;
+    font-size: .5rem !important;
+    line-height: 12px !important;
+    padding: 1px 6px !important;
+  }
+
+  body[data-phase="playing"] .space:not(.center) .tokens {
+    bottom: 2px !important;
+    height: 17px !important;
+  }
+
+  body[data-phase="playing"] .space:not(.center) .tokens .token {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    font-size: .54rem !important;
+  }
+}
