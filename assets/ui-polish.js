@@ -51,14 +51,90 @@
     actions.classList.add("compact-actions");
   }
 
+  function ensureTopStats() {
+    const header = document.querySelector("header");
+    if (!header || header.querySelector(".top-stats")) return;
+    const stats = document.createElement("div");
+    stats.className = "top-stats";
+    const timer = header.querySelector(".timer");
+    header.insertBefore(stats, timer || null);
+  }
+
+  function clean(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function updateTopStats() {
+    const stats = document.querySelector(".top-stats");
+    if (!stats) return;
+    const room = clean(document.getElementById("roomInfo")?.textContent).match(/방\s*([^·\s]+)/)?.[1] || "-";
+    const count = clean(document.getElementById("roomInfo")?.textContent).match(/참가\s*(\d+\/6명)/)?.[1] || "0/6명";
+    const turn = clean(document.getElementById("activePlayer")?.textContent).replace("참가 대기 중", "대기 중") || "대기 중";
+    const era = clean(document.getElementById("gameStatus")?.textContent).match(/(전반전|후반전)/)?.[1] || "여행 중";
+    stats.innerHTML = `
+      <span class="top-pill">방 ${room}</span>
+      <span class="top-pill">${count}</span>
+      <span class="top-pill">${era}</span>
+      <span class="top-pill">${turn}</span>`;
+  }
+
+  function ensureCenterLive() {
+    const center = document.querySelector(".space.center");
+    if (!center) return null;
+    center.classList.add("live-center-card");
+    [".center-globe", ".center-title", ".center-grid"].forEach(selector => {
+      const el = center.querySelector(selector);
+      if (el) el.classList.add("legacy-center-content");
+    });
+    let live = center.querySelector(".center-live");
+    if (!live) {
+      live = document.createElement("div");
+      live.className = "center-live";
+      center.appendChild(live);
+    }
+    return live;
+  }
+
+  function currentPlaceText() {
+    const cell = document.querySelector(".space.current");
+    const name = clean(cell?.querySelector(".name")?.textContent) || "세계 여행";
+    const meta = clean(cell?.querySelector(".meta, .meta-slot")?.textContent);
+    return {name, meta};
+  }
+
+  function updateCenterLive() {
+    const live = ensureCenterLive();
+    if (!live) return;
+    const mission = clean(document.getElementById("missionText")?.textContent);
+    const cardText = clean(document.getElementById("travelCard")?.textContent);
+    const dice = clean(document.getElementById("dice")?.textContent) || "⚀ ⚀";
+    const place = currentPlaceText();
+    const hasCard = cardText && !cardText.includes("주사위를 굴리면");
+    const title = hasCard ? "카드 알림" : place.name;
+    const body = hasCard ? cardText.replace(/^여권 카드\s*/, "") : (mission || "현재 여행 상황을 확인하세요.");
+    live.innerHTML = `
+      <div class="live-eyebrow">${hasCard ? "방금 도착한 카드" : "현재 도착지"}</div>
+      <h2 class="live-title">${hasCard ? "🛂 " : "🧭 "}${title}</h2>
+      <p class="live-text">${body}</p>
+      <div class="live-stats">
+        <div class="live-stat"><span>주사위</span>${dice}</div>
+        <div class="live-stat"><span>칸 정보</span>${place.meta || "이동 대기"}</div>
+        <div class="live-stat"><span>다음 행동</span>${mission || "차례 확인"}</div>
+      </div>`;
+  }
+
   function applyPolish() {
+    ensureTopStats();
     buildSupportTabs();
     compactActionButtons();
+    updateTopStats();
+    updateCenterLive();
   }
 
   ready(() => {
     applyPolish();
+    setInterval(applyPolish, 700);
     const observer = new MutationObserver(() => applyPolish());
-    observer.observe(document.body, {childList:true, subtree:true});
+    observer.observe(document.body, {childList:true, subtree:true, characterData:true});
   });
 })();
