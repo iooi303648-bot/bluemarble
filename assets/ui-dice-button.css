@@ -55,6 +55,23 @@ body[data-phase="playing"] .space:not(.center) > div:first-child {
   min-height: 0 !important;
 }
 
+body[data-phase="playing"] .space:not(.center) .flag-badge {
+  width: auto !important;
+  min-width: 22px !important;
+  height: 18px !important;
+  padding: 0 2px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+}
+
+body[data-phase="playing"] .space:not(.center) .flag-badge img {
+  display: none !important;
+}
+
 body[data-phase="playing"] .space:not(.center) .owner-slot {
   position: absolute !important;
   left: 4px !important;
@@ -110,6 +127,12 @@ body[data-phase="playing"] .space:not(.center) .tokens .token {
 @media (max-height: 760px), (max-width: 1180px) {
   body[data-phase="playing"] .space:not(.center) {
     padding-bottom: 22px !important;
+  }
+
+  body[data-phase="playing"] .space:not(.center) .flag-badge {
+    min-width: 20px !important;
+    height: 16px !important;
+    font-size: .92rem !important;
   }
 
   body[data-phase="playing"] .space:not(.center) .owner-slot {
