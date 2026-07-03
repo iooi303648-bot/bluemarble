@@ -4,7 +4,7 @@ const Module = require("module");
 const { Readable } = require("stream");
 
 const originalCreateReadStream = fs.createReadStream.bind(fs);
-const THEME_VERSION = "theme-20260703m";
+const THEME_VERSION = "theme-20260703n";
 const THEME_CSS = [
   "ui-polish.css",
   "ui-compact-play.css",
@@ -18,7 +18,7 @@ function cssTag(file) {
 }
 
 function helperScripts() {
-  return `  <script src="/assets/ui-polish.js?v=${THEME_VERSION}"></script>\n  <script>\n    (() => {\n      function playerCount() {\n        const text = document.querySelector('[data-lobby-count]')?.textContent || document.getElementById('roomInfo')?.textContent || '';\n        const match = text.match(/(\\d+)\\/6/);\n        return match ? Number(match[1]) : document.querySelectorAll('#players .player').length;\n      }\n      function enableRestart() {\n        if (document.body.dataset.phase !== 'finished' || playerCount() < 2) return;\n        const realStart = document.getElementById('startGame');\n        const lobbyStart = document.querySelector('[data-lobby-start]');\n        if (realStart) realStart.disabled = false;\n        if (lobbyStart) {\n          lobbyStart.disabled = false;\n          lobbyStart.textContent = '✈ 다시 시작';\n        }\n      }\n      document.addEventListener('click', event => {\n        if (event.target.closest('[data-lobby-start]')) enableRestart();\n      }, true);\n      setInterval(enableRestart, 300);\n    })();\n  </script>`;
+  return `  <script src="/assets/ui-polish.js?v=${THEME_VERSION}"></script>\n  <script>\n    (() => {\n      const emojiFlags = {kr:'🇰🇷', jp:'🇯🇵', cn:'🇨🇳', sa:'🇸🇦', eg:'🇪🇬', ke:'🇰🇪', fr:'🇫🇷', gb:'🇬🇧', us:'🇺🇸', ca:'🇨🇦', br:'🇧🇷', au:'🇦🇺'};\n      function normalizeFlags() {\n        document.querySelectorAll('.flag-badge').forEach(badge => {\n          const img = badge.querySelector('img');\n          const code = img?.dataset.code || badge.dataset.code;\n          const flag = emojiFlags[code];\n          if (!flag || badge.dataset.emojiFlag === flag) return;\n          badge.dataset.code = code;\n          badge.dataset.emojiFlag = flag;\n          badge.textContent = flag;\n        });\n      }\n      function playerCount() {\n        const text = document.querySelector('[data-lobby-count]')?.textContent || document.getElementById('roomInfo')?.textContent || '';\n        const match = text.match(/(\\d+)\\/6/);\n        return match ? Number(match[1]) : document.querySelectorAll('#players .player').length;\n      }\n      function enableRestart() {\n        if (document.body.dataset.phase !== 'finished' || playerCount() < 2) return;\n        const realStart = document.getElementById('startGame');\n        const lobbyStart = document.querySelector('[data-lobby-start]');\n        if (realStart) realStart.disabled = false;\n        if (lobbyStart) {\n          lobbyStart.disabled = false;\n          lobbyStart.textContent = '✈ 다시 시작';\n        }\n      }\n      document.addEventListener('click', event => {\n        if (event.target.closest('[data-lobby-start]')) enableRestart();\n      }, true);\n      setInterval(() => { normalizeFlags(); enableRestart(); }, 300);\n    })();\n  </script>`;
 }
 
 fs.createReadStream = function themedCreateReadStream(filePath, options) {
