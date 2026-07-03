@@ -79,7 +79,7 @@
     const summary = getRoomSummary();
     const status = summary.waiting ? "참가 대기" : "여행 중";
     const compact = `방 ${summary.room} · ${status} · 참가 ${summary.count} · 내 이름: ${summary.name}`;
-    if (roomInfo.dataset.compactText !== compact) {
+    if (clean(roomInfo.textContent) !== compact) {
       roomInfo.dataset.compactText = compact;
       roomInfo.textContent = compact;
     }
