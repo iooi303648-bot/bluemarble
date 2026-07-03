@@ -4,7 +4,7 @@ const Module = require("module");
 const { Readable } = require("stream");
 
 const originalCreateReadStream = fs.createReadStream.bind(fs);
-const THEME_VERSION = "theme-20260703k";
+const THEME_VERSION = "theme-20260703l";
 const THEME_CSS = [
   "ui-polish.css",
   "ui-compact-play.css",
@@ -39,6 +39,7 @@ fs.createReadStream = function themedCreateReadStream(filePath, options) {
 
 const serverPath = path.join(__dirname, "world_blue_marble_lan_server.js");
 let serverSource = fs.readFileSync(serverPath, "utf8");
+const originalServerSource = serverSource;
 const patchedStartBlock = `  if (action === "start") {
     if (!["lobby", "finished"].includes(state.phase)) return {};
     if (state.players.length < 2) throw new Error("2명 이상 참가해야 시작할 수 있습니다.");
@@ -67,13 +68,14 @@ const patchedStartBlock = `  if (action === "start") {
     state.current = 0;
     state.rolled = false;
     log("여행을 다시 시작했습니다.");
-    log(`1인당 시작 자금 ${startMoney}.`);
+    log("1인당 시작 자금 " + startMoney + ".");
     startTimer();
     return {};
   }
 
   if (action === "finish") {`;
 serverSource = serverSource.replace(/  if \(action === "start"\) \{[\s\S]*?\n  if \(action === "finish"\) \{/, patchedStartBlock);
+if (serverSource === originalServerSource) throw new Error("start action patch failed");
 
 const serverModule = new Module(serverPath, module);
 serverModule.filename = serverPath;
