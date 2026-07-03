@@ -49,6 +49,7 @@ body:not([data-phase="playing"]) .timer {
   border-radius: 10px !important;
 }
 
+body:not([data-phase="playing"]) .timer span,
 body:not([data-phase="playing"]) .timer .label,
 body:not([data-phase="playing"]) .timer small {
   font-size: .68rem !important;
@@ -62,9 +63,11 @@ body:not([data-phase="playing"]) .timer strong {
 }
 
 body:not([data-phase="playing"]) .setup {
+  display: block !important;
+  width: min(760px, calc(100vw - 36px)) !important;
   max-width: 760px !important;
   margin: 10px auto 12px !important;
-  padding: 12px 16px 14px !important;
+  padding: 12px 14px 14px !important;
   border-radius: 14px !important;
 }
 
@@ -72,27 +75,52 @@ body:not([data-phase="playing"]) .join-card {
   padding: 10px 12px !important;
   border-radius: 12px !important;
   display: grid !important;
-  grid-template-columns: auto 1fr auto auto !important;
+  gap: 8px !important;
   align-items: center !important;
-  gap: 8px 10px !important;
 }
 
-body:not([data-phase="playing"]) .join-card .badge,
-body:not([data-phase="playing"]) .join-card .passport,
-body:not([data-phase="playing"]) .join-card [class*="passport"] {
-  grid-row: 1 !important;
-  align-self: center !important;
+body:not([data-phase="playing"]) .join-card::after {
+  right: 12px !important;
+  top: 9px !important;
+  font-size: 1.25rem !important;
+  opacity: .55 !important;
 }
 
-body:not([data-phase="playing"]) #roomInfo {
-  grid-column: 2 / 5 !important;
+body:not([data-phase="playing"]) #roomInfo,
+body:not([data-phase="playing"]) .room {
+  min-height: 26px !important;
   color: #4d422c !important;
-  font-size: .88rem !important;
-  font-weight: 800 !important;
-  line-height: 1.2 !important;
+  font-size: .86rem !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-right: 34px !important;
+}
+
+body:not([data-phase="playing"]) .room::before {
+  width: 78px !important;
+  height: 24px !important;
+  margin-right: 10px !important;
+  flex: 0 0 auto !important;
+  font-size: .62rem !important;
+}
+
+body:not([data-phase="playing"]) .room-line {
+  display: grid !important;
+  grid-template-columns: 86px minmax(0, 1fr) !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+body:not([data-phase="playing"]) .join-line {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  gap: 8px !important;
+  align-items: center !important;
 }
 
 body:not([data-phase="playing"]) .join-card label {
@@ -111,14 +139,6 @@ body:not([data-phase="playing"]) .join-card input {
   padding: 6px 10px !important;
 }
 
-body:not([data-phase="playing"]) #roomCode {
-  grid-column: 2 / 5 !important;
-}
-
-body:not([data-phase="playing"]) #playerName {
-  grid-column: 2 / 3 !important;
-}
-
 body:not([data-phase="playing"]) #joinBtn,
 body:not([data-phase="playing"]) #resetDeviceBtn {
   min-height: 38px !important;
@@ -126,6 +146,7 @@ body:not([data-phase="playing"]) #resetDeviceBtn {
   padding: 0 14px !important;
   border-radius: 10px !important;
   font-size: .88rem !important;
+  line-height: 1 !important;
   white-space: nowrap !important;
 }
 
@@ -133,16 +154,18 @@ body:not([data-phase="playing"]) .setup > .actions,
 body:not([data-phase="playing"]) .setup .setup-actions {
   display: flex !important;
   justify-content: center !important;
+  align-items: center !important;
   gap: 10px !important;
   margin-top: 10px !important;
 }
 
 body:not([data-phase="playing"]) #startBtn,
 body:not([data-phase="playing"]) #newRoomBtn {
-  min-width: 180px !important;
+  min-width: 150px !important;
   height: 38px !important;
   padding: 0 18px !important;
   font-size: .92rem !important;
+  line-height: 1 !important;
 }
 
 body:not([data-phase="playing"]) .board-panel {
@@ -157,11 +180,7 @@ body:not([data-phase="playing"]) .game-status {
   font-size: .84rem !important;
 }
 
-body:not([data-phase="playing"]) .side-panel {
-  margin-top: 0 !important;
-}
-
-@media (max-width: 860px) {
+@media (max-width: 760px) {
   body:not([data-phase="playing"]) header {
     grid-template-columns: 1fr auto !important;
     padding: 12px 14px !important;
@@ -174,22 +193,20 @@ body:not([data-phase="playing"]) .side-panel {
   }
 
   body:not([data-phase="playing"]) .setup {
+    width: calc(100vw - 20px) !important;
     margin-left: 10px !important;
     margin-right: 10px !important;
   }
 
-  body:not([data-phase="playing"]) .join-card {
-    grid-template-columns: auto 1fr !important;
-  }
-
-  body:not([data-phase="playing"]) #roomInfo,
-  body:not([data-phase="playing"]) #roomCode,
-  body:not([data-phase="playing"]) #playerName {
-    grid-column: 2 / 3 !important;
+  body:not([data-phase="playing"]) .room-line,
+  body:not([data-phase="playing"]) .join-line {
+    grid-template-columns: 1fr !important;
   }
 
   body:not([data-phase="playing"]) #joinBtn,
-  body:not([data-phase="playing"]) #resetDeviceBtn {
-    grid-column: span 1 !important;
+  body:not([data-phase="playing"]) #resetDeviceBtn,
+  body:not([data-phase="playing"]) #startBtn,
+  body:not([data-phase="playing"]) #newRoomBtn {
+    width: 100% !important;
   }
 }
