@@ -4,12 +4,13 @@ const Module = require("module");
 const { Readable } = require("stream");
 
 const originalCreateReadStream = fs.createReadStream.bind(fs);
-const THEME_VERSION = "theme-20260703i";
+const THEME_VERSION = "theme-20260703j";
 const THEME_CSS = [
   "ui-polish.css",
   "ui-compact-play.css",
   "ui-live-panel.css",
-  "ui-lobby-compact.css"
+  "ui-lobby-compact.css",
+  "ui-dice-button.css"
 ];
 
 function cssTag(file) {
@@ -61,7 +62,7 @@ const patchedStartBlock = `  if (action === "start") {
     state.secondsLeft = 20 * 60;
     state.current = 0;
     state.rolled = false;
-    log(keptPlayers.some(pl => pl.stamps.length) ? "새 여행을 다시 시작했습니다." : "게임을 시작했습니다.");
+    log("여행을 다시 시작했습니다.");
     log(`1인당 시작 자금 ${startMoney}.`);
     startTimer();
     return {};
