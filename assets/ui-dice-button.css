@@ -1,0 +1,16 @@
+body[data-phase="playing"] #rollDice {
+  min-height: 54px !important;
+  font-size: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+body[data-phase="playing"] #rollDice::before {
+  content: "🎲";
+  font-size: 2rem;
+  line-height: 1;
+}
+
+body[data-phase="playing"] #rollDice:disabled::before {
+  opacity: .72;
+}
