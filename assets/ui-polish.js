@@ -64,17 +64,36 @@
     return String(text || "").replace(/\s+/g, " ").trim();
   }
 
+  function getRoomSummary() {
+    const roomInfo = clean(document.getElementById("roomInfo")?.textContent);
+    const room = roomInfo.match(/방\s*([^·\s]+)/)?.[1] || document.getElementById("roomCode")?.value || "-";
+    const count = roomInfo.match(/참가\s*(\d+\/6명)/)?.[1] || "0/6명";
+    const name = roomInfo.match(/내 이름:\s*([^·]+)/)?.[1]?.trim() || clean(document.getElementById("playerName")?.value) || "이름 입력 전";
+    const waiting = roomInfo.includes("참가 대기") || clean(document.getElementById("activePlayer")?.textContent).includes("대기");
+    return {room, count, name, waiting};
+  }
+
+  function compactLobbyInfo() {
+    const roomInfo = document.getElementById("roomInfo");
+    if (!roomInfo) return;
+    const summary = getRoomSummary();
+    const status = summary.waiting ? "참가 대기" : "여행 중";
+    const compact = `방 ${summary.room} · ${status} · 참가 ${summary.count} · 내 이름: ${summary.name}`;
+    if (roomInfo.dataset.compactText !== compact) {
+      roomInfo.dataset.compactText = compact;
+      roomInfo.textContent = compact;
+    }
+  }
+
   function updateTopStats() {
     const stats = document.querySelector(".top-stats");
     if (!stats) return;
-    const roomInfo = clean(document.getElementById("roomInfo")?.textContent);
-    const room = roomInfo.match(/방\s*([^·\s]+)/)?.[1] || "-";
-    const count = roomInfo.match(/참가\s*(\d+\/6명)/)?.[1] || "0/6명";
+    const summary = getRoomSummary();
     const turn = clean(document.getElementById("activePlayer")?.textContent).replace("참가 대기 중", "대기 중") || "대기 중";
     const era = clean(document.getElementById("gameStatus")?.textContent).match(/(전반전|후반전)/)?.[1] || "여행 중";
     const html = `
-      <span class="top-pill">방 ${room}</span>
-      <span class="top-pill">${count}</span>
+      <span class="top-pill">방 ${summary.room}</span>
+      <span class="top-pill">${summary.count}</span>
       <span class="top-pill">${era}</span>
       <span class="top-pill">${turn}</span>`;
     if (stats.dataset.lastHtml !== html) {
@@ -139,6 +158,7 @@
   }
 
   function applyDynamicText() {
+    compactLobbyInfo();
     updateTopStats();
     updateCenterLive();
   }
