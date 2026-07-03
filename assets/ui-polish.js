@@ -12,10 +12,6 @@
     return String(text || "").replace(/\s+/g, " ").trim();
   }
 
-  function roomUrl(room) {
-    return `${location.origin}${location.pathname}?room=${encodeURIComponent(room || "1")}`;
-  }
-
   function getRoomSummary() {
     const roomInfo = clean(document.getElementById("roomInfo")?.textContent);
     const roomInput = clean(document.getElementById("roomCode")?.value);
@@ -172,17 +168,14 @@
           <span class="lobby-badge">✈ 출국 대기실</span>
           <span>여행 준비 중</span>
         </div>
-        <div class="lobby-section lobby-grid">
+        <div class="lobby-section lobby-grid lobby-room-grid">
           <div>
             <span class="lobby-label">방 코드</span>
             <div class="room-code-card" data-lobby-room-code>1</div>
           </div>
-          <div>
-            <span class="lobby-label">방 URL <small>(같은 와이파이에서 접속)</small></span>
-            <div class="room-url-wrap">
-              <span class="room-url" data-lobby-url></span>
-              <button type="button" class="copy-url-btn" data-lobby-copy>복사</button>
-            </div>
+          <div class="room-code-help">
+            <b>친구에게 방 코드를 알려주세요</b>
+            <span>같은 방 코드로 들어오면 한 모둠에서 함께 플레이합니다.</span>
           </div>
           <div class="ticket-art" aria-hidden="true">🛫</div>
         </div>
@@ -191,7 +184,7 @@
           <div class="join-row">
             <input class="lobby-name-input" data-lobby-name maxlength="8" placeholder="예: 지우, 민준, 하늘이">
             <button type="button" class="lobby-primary-btn" data-lobby-join>✈ 참가하기</button>
-            <button type="button" class="lobby-reset-btn" data-lobby-leave>↻ 내 기기 초기화</button>
+            <button type="button" class="lobby-reset-btn" data-lobby-leave>↻ 초기화</button>
           </div>
         </div>
         <div class="lobby-section">
@@ -242,17 +235,6 @@
     lobby.querySelector("[data-lobby-leave]").addEventListener("click", () => document.getElementById("leaveButton")?.click());
     lobby.querySelector("[data-lobby-start]").addEventListener("click", () => document.getElementById("startGame")?.click());
     lobby.querySelector("[data-lobby-new-room]").addEventListener("click", () => document.getElementById("resetGame")?.click());
-    lobby.querySelector("[data-lobby-copy]").addEventListener("click", async () => {
-      const summary = getRoomSummary();
-      const url = roomUrl(summary.room);
-      try {
-        await navigator.clipboard.writeText(url);
-        lobby.querySelector("[data-lobby-copy]").textContent = "복사됨";
-        setTimeout(() => lobby.querySelector("[data-lobby-copy]").textContent = "복사", 1200);
-      } catch {
-        prompt("방 URL을 복사하세요", url);
-      }
-    });
     if (roomInput) {
       roomInput.addEventListener("input", () => updateLobbyScreen());
     }
@@ -274,12 +256,10 @@
     const lobby = ensureLobbyScreen();
     if (!lobby) return;
     const summary = getRoomSummary();
-    const url = roomUrl(summary.room);
     const realName = document.getElementById("playerName")?.value || "";
     const lobbyName = lobby.querySelector("[data-lobby-name]");
     if (document.activeElement !== lobbyName && lobbyName.value !== realName) lobbyName.value = realName;
     lobby.querySelector("[data-lobby-room-code]").textContent = summary.room;
-    lobby.querySelector("[data-lobby-url]").textContent = url;
     lobby.querySelector("[data-lobby-count]").textContent = summary.count;
     const startBtn = lobby.querySelector("[data-lobby-start]");
     const realStart = document.getElementById("startGame");
